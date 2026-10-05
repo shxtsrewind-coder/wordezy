@@ -124,6 +124,7 @@ export const GamePage: React.FC = () => {
           status: data.status === 'not_started' ? 'in_progress' : data.status,
           solution: data.solution || null,
           durationMs: data.duration_ms ?? null,
+          isNewBest: false,
         });
       }
       await refreshProfile();
@@ -233,6 +234,7 @@ export const GamePage: React.FC = () => {
         status: data.status,
         solution: data.solution || null,
         durationMs: data.duration_ms ?? null,
+        isNewBest: data.is_new_best ?? false,
       };
     },
     [refreshProfile]
@@ -473,12 +475,20 @@ export const GamePage: React.FC = () => {
                     : `The word was ${activeRound.solution?.toUpperCase()}`}
                 </p>
                 {activeRound.status === 'won' && (
-                  <p className="text-xs text-muted">
-                    Solved in {activeRound.guesses.length} / {active.maxGuesses}
-                    {mode === 'daily' && activeRound.durationMs != null && (
-                      <span className="text-present font-mono font-medium"> · {formatDuration(activeRound.durationMs)}</span>
+                  <>
+                    <p className="text-xs text-muted">
+                      Solved in {activeRound.guesses.length} / {active.maxGuesses}
+                      {mode === 'daily' && activeRound.durationMs != null && (
+                        <span className="text-present font-mono font-medium"> · {formatDuration(activeRound.durationMs)}</span>
+                      )}
+                    </p>
+                    {mode === 'daily' && activeRound.isNewBest && (
+                      <p className="inline-flex items-center gap-1 text-xs font-medium text-present bg-present-soft border border-present-dim/50 rounded-full px-2.5 py-1">
+                        <Flame className="w-3.5 h-3.5" />
+                        New fastest solve!
+                      </p>
                     )}
-                  </p>
+                  </>
                 )}
                 <div className="flex items-center justify-center gap-2 pt-1">
                   {mode === 'practice' ? (

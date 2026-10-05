@@ -13,6 +13,8 @@ export interface RoundState {
   solution: string | null;
   /** Milliseconds between the round starting and finishing (Daily only; null until won/lost). */
   durationMs: number | null;
+  /** True when this win just beat the player's own best daily solve time. */
+  isNewBest: boolean;
 }
 
 export interface SubmitResult {
@@ -20,10 +22,11 @@ export interface SubmitResult {
   status: GameStatus;
   solution: string | null;
   durationMs?: number | null;
+  isNewBest?: boolean;
 }
 
 export function emptyRoundState(): RoundState {
-  return { guesses: [], feedback: [], status: 'in_progress', solution: null, durationMs: null };
+  return { guesses: [], feedback: [], status: 'in_progress', solution: null, durationMs: null, isNewBest: false };
 }
 
 /**
@@ -87,6 +90,7 @@ export function useWordleGame(
             status: result.status,
             solution: result.solution ?? prev.solution,
             durationMs: result.durationMs ?? prev.durationMs,
+            isNewBest: result.isNewBest ?? prev.isNewBest,
           }));
           setCurrentGuess('');
           setJustSubmittedRow(rowIdx);
