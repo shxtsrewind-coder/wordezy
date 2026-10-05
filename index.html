@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- Primary SEO -->
+    <title>WordLock — A Free Daily Word Guessing Game</title>
+    <meta
+      name="description"
+      content="Guess the 5-letter word in 6 tries. One new word every day, shared by every player — plus unlimited practice rounds anytime."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://wordlock.bgameworld.com/" />
+    <meta name="theme-color" content="#0c0a09" />
+    <meta name="author" content="bgameworld.com" />
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="WordLock" />
+    <meta property="og:title" content="WordLock — A Free Daily Word Guessing Game" />
+    <meta
+      property="og:description"
+      content="Guess the 5-letter word in 6 tries. One new word every day, shared by every player — plus unlimited practice rounds anytime."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://wordlock.bgameworld.com/" />
+    <meta property="og:image" content="https://wordlock.bgameworld.com/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="WordLock — A Free Daily Word Guessing Game" />
+    <meta
+      name="twitter:description"
+      content="Guess the 5-letter word in 6 tries. One new word every day, shared by every player."
+    />
+    <meta name="twitter:image" content="https://wordlock.bgameworld.com/og-image.jpg" />
+
+    <!-- Icons -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "WordLock",
+        "url": "https://wordlock.bgameworld.com/",
+        "description": "Guess the 5-letter word in 6 tries. One new word every day, shared by every player.",
+        "genre": ["Puzzle", "Word Game"],
+        "applicationCategory": "Game",
+        "operatingSystem": "Any (Web Browser)",
+        "isAccessibleForFree": true,
+        "publisher": {
+          "@type": "Organization",
+          "name": "bgameworld.com",
+          "url": "https://bgameworld.com/"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://hkcvtoozpeybwehqtiif.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://hkcvtoozpeybwehqtiif.supabase.co" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Critical, inline boot styles — paint before the JS bundle, Tailwind's
+      generated CSS, or web fonts arrive, so the first frame is the dark
+      background and a loading mark instead of a flash of blank/white.
+    -->
+    <style>
+      html,
+      body {
+        background-color: #0c0a09;
+      }
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background-color: #0c0a09;
+        background-image: radial-gradient(circle at 50% 0%, #1c1917 0%, #0c0a09 55%, #090807 100%);
+        transition: opacity 0.25s ease;
+      }
+      #initial-loader.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #initial-loader .wl-loader-mark {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: 'Cinzel', Georgia, serif;
+        font-weight: 700;
+        font-size: 28px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      #initial-loader .wl-loader-mark .tile {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        color: #0c0a09;
+      }
+      #initial-loader .wl-loader-mark .tile:nth-child(1) { background: #15803d; }
+      #initial-loader .wl-loader-mark .tile:nth-child(2) { background: #a16207; }
+      #initial-loader .wl-loader-mark .tile:nth-child(3) { background: #44403c; color: #d6d3d1; }
+      #initial-loader .wl-loader-mark .tile:nth-child(4) { background: #15803d; }
+      #initial-loader .wl-loader-spinner {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2.5px solid rgba(21, 128, 61, 0.25);
+        border-top-color: #22c55e;
+        animation: wl-spin 0.7s linear infinite;
+      }
+      #initial-loader .wl-loader-caption {
+        font-family: 'IBM Plex Mono', ui-monospace, monospace;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #78716c;
+      }
+      @keyframes wl-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #initial-loader .wl-loader-spinner {
+          animation-duration: 1.4s;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-[#0c0a09] text-stone-100 antialiased selection:bg-emerald-900/60 selection:text-emerald-200">
+    <div id="initial-loader" aria-live="polite" aria-label="Loading WordLock">
+      <div class="wl-loader-mark">
+        <span class="tile">W</span>
+        <span class="tile">L</span>
+        <span class="tile">O</span>
+        <span class="tile">K</span>
+      </div>
+      <div class="wl-loader-spinner" role="status"></div>
+      <div class="wl-loader-caption">Shuffling the letters&hellip;</div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  // Static-site deploy config for Cloudflare Workers. No server-side Worker
+  // code here — this is a built Vite SPA (dist/), served directly by
+  // Workers' static-assets mode. All backend logic lives in Supabase.
+  //
+  // Build step (run by Cloudflare before deploy): `npm run build` → dist/
+  // Deploy step: `npx wrangler deploy`
+  "name": "wordlock",
+  "compatibility_date": "2026-01-01",
+  "assets": {
+    "directory": "./dist",
+    // react-router's HashRouter keeps everything at the physical "/" URL,
+    // so any path that isn't a real file in dist/ should fall back to
+    // index.html rather than 404.
+    "not_found_handling": "single-page-application"
+  }
+}
