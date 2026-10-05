@@ -58,23 +58,23 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ userId, onCl
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-4 shadow-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between pb-2 border-b border-stone-800">
-          <h2 className="font-display font-bold text-stone-100 flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-400" />
-            Speed Leaderboard
+      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-4 shadow-xl shadow-black/40 max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between pb-2 border-b border-rule">
+          <h2 className="font-display font-semibold text-paper flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-present" />
+            Speed leaderboard
           </h2>
-          <button type="button" onClick={onClose} className="text-stone-400 hover:text-stone-200 cursor-pointer">
+          <button type="button" onClick={onClose} className="text-muted hover:text-paper cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1 bg-ink border border-rule rounded-md p-1">
           <button
             type="button"
             onClick={() => setTab('today')}
-            className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
-              tab === 'today' ? 'bg-emerald-600 text-white' : 'bg-stone-800 text-stone-400'
+            className={`flex-1 py-1.5 rounded text-sm font-medium cursor-pointer transition-colors ${
+              tab === 'today' ? 'bg-surface-high text-correct' : 'text-muted'
             }`}
           >
             Today
@@ -82,26 +82,26 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ userId, onCl
           <button
             type="button"
             onClick={() => setTab('alltime')}
-            className={`flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
-              tab === 'alltime' ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-stone-400'
+            className={`flex-1 py-1.5 rounded text-sm font-medium cursor-pointer transition-colors ${
+              tab === 'alltime' ? 'bg-surface-high text-present' : 'text-muted'
             }`}
           >
-            All-Time
+            All-time
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto -mx-1 px-1 space-y-1">
           {loading && (
             <div className="py-8 flex justify-center">
-              <div className="w-6 h-6 border-2 border-stone-700 border-t-emerald-500 rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-rule border-t-correct rounded-full animate-spin" />
             </div>
           )}
 
-          {!loading && error && <p className="text-xs text-rose-400 text-center py-6">{error}</p>}
+          {!loading && error && <p className="text-xs text-danger text-center py-6">{error}</p>}
 
           {!loading && !error && currentRows && currentRows.length === 0 && (
-            <p className="text-xs text-stone-500 text-center py-8">
-              {tab === 'today' ? "No one has solved today's word yet — be the first!" : 'No fast solves recorded yet.'}
+            <p className="text-xs text-muted text-center py-8">
+              {tab === 'today' ? "No one has solved today's word yet — be the first." : 'No fast solves recorded yet.'}
             </p>
           )}
 
@@ -114,18 +114,18 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ userId, onCl
               return (
                 <div
                   key={row.user_id}
-                  className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm ${
-                    isYou ? 'bg-emerald-950/50 border border-emerald-700/50' : 'hover:bg-stone-850'
+                  className={`flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm ${
+                    isYou ? 'bg-correct-soft border border-correct-dim/50' : 'hover:bg-surface-high'
                   }`}
                 >
-                  <span className="w-6 text-center text-xs font-mono text-stone-500 shrink-0">{medal || `#${idx + 1}`}</span>
+                  <span className="w-6 text-center text-xs font-mono text-muted shrink-0">{medal || `#${idx + 1}`}</span>
                   <span className="text-base shrink-0">{codeToFlagEmoji(row.country_code) || '🌐'}</span>
-                  <span className={`flex-1 truncate font-medium ${isYou ? 'text-emerald-300' : 'text-stone-200'}`}>
+                  <span className={`flex-1 truncate font-medium ${isYou ? 'text-correct' : 'text-paper'}`}>
                     {row.display_name}
-                    {isYou && <span className="text-[10px] text-emerald-500 font-mono ml-1">(you)</span>}
+                    {isYou && <span className="text-[10px] text-correct/80 font-mono ml-1">(you)</span>}
                   </span>
-                  <span className="text-xs text-stone-500 font-mono">{row.attempts}/6</span>
-                  <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1 shrink-0">
+                  <span className="text-xs text-muted font-mono">{row.attempts}/6</span>
+                  <span className="text-xs font-mono font-semibold text-present flex items-center gap-1 shrink-0">
                     <Zap className="w-3 h-3" />
                     {formatDuration(row.duration_ms)}
                   </span>
@@ -135,7 +135,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ userId, onCl
         </div>
 
         {!loading && currentRows && myRank === -1 && userId && (
-          <p className="text-[11px] text-stone-500 text-center pt-2 border-t border-stone-800">
+          <p className="text-[11px] text-muted text-center pt-2 border-t border-rule">
             {tab === 'today' ? "Solve today's word to join the race." : 'Win a daily round to join the all-time board.'}
           </p>
         )}

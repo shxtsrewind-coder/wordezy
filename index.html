@@ -12,7 +12,7 @@
     />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://wordezy.bgameworld.com/" />
-    <meta name="theme-color" content="#0c0a09" />
+    <meta name="theme-color" content="#0b0a08" />
     <meta name="author" content="bgameworld.com" />
 
     <!-- Open Graph -->
@@ -86,7 +86,7 @@
     <style>
       html,
       body {
-        background-color: #0c0a09;
+        background-color: #0b0a08;
       }
       #initial-loader {
         position: fixed;
@@ -97,8 +97,8 @@
         align-items: center;
         justify-content: center;
         gap: 18px;
-        background-color: #0c0a09;
-        background-image: radial-gradient(circle at 50% 0%, #1c1917 0%, #0c0a09 55%, #090807 100%);
+        background-color: #0b0a08;
+        background-image: radial-gradient(ellipse 900px 500px at 50% -10%, rgba(47, 158, 110, 0.08), transparent 60%);
         transition: opacity 0.25s ease;
       }
       #initial-loader.is-hidden {
@@ -110,10 +110,9 @@
         align-items: center;
         gap: 6px;
         font-family: 'Cinzel', Georgia, serif;
-        font-weight: 700;
-        font-size: 28px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        font-weight: 600;
+        font-size: 26px;
+        letter-spacing: 0.04em;
       }
       #initial-loader .wl-loader-mark .tile {
         display: inline-flex;
@@ -121,27 +120,26 @@
         justify-content: center;
         width: 30px;
         height: 30px;
-        border-radius: 6px;
-        color: #0c0a09;
+        border-radius: 5px;
+        color: #0b0a08;
       }
-      #initial-loader .wl-loader-mark .tile:nth-child(1) { background: #15803d; }
-      #initial-loader .wl-loader-mark .tile:nth-child(2) { background: #a16207; }
-      #initial-loader .wl-loader-mark .tile:nth-child(3) { background: #44403c; color: #d6d3d1; }
-      #initial-loader .wl-loader-mark .tile:nth-child(4) { background: #15803d; }
+      #initial-loader .wl-loader-mark .tile:nth-child(1) { background: #2f9e6e; }
+      #initial-loader .wl-loader-mark .tile:nth-child(2) { background: #c9922f; }
+      #initial-loader .wl-loader-mark .tile:nth-child(3) { background: #342f26; color: #978c79; }
+      #initial-loader .wl-loader-mark .tile:nth-child(4) { background: #2f9e6e; }
       #initial-loader .wl-loader-spinner {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
-        border: 2.5px solid rgba(21, 128, 61, 0.25);
-        border-top-color: #22c55e;
+        border: 2.5px solid rgba(47, 158, 110, 0.2);
+        border-top-color: #2f9e6e;
         animation: wl-spin 0.7s linear infinite;
       }
       #initial-loader .wl-loader-caption {
         font-family: 'IBM Plex Mono', ui-monospace, monospace;
         font-size: 11px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #78716c;
+        letter-spacing: 0.06em;
+        color: #978c79;
       }
       @keyframes wl-spin {
         to {

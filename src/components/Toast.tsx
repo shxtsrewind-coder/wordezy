@@ -3,8 +3,8 @@ import React from 'react';
 export type ToastVariant = 'neutral' | 'error';
 
 const VARIANT_CLASSES: Record<ToastVariant, string> = {
-  neutral: 'bg-stone-100 text-stone-900',
-  error: 'bg-rose-600 text-white',
+  neutral: 'bg-paper text-ink',
+  error: 'bg-danger text-paper',
 };
 
 export const Toast: React.FC<{ message: string | null; variant?: ToastVariant }> = ({

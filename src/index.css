@@ -4,11 +4,52 @@
   --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --font-display: 'Cinzel', Georgia, serif;
+
+  /* Letterpress palette — derived from the tile feedback colors themselves
+     (correct/present/absent) rather than an arbitrary accent pair, warmed
+     toward ink-and-paper instead of cool SaaS gray. */
+  --color-ink: #0b0a08;
+  --color-surface: #161310;
+  --color-surface-high: #201b15;
+  --color-rule: #2a241c;
+  --color-paper: #f2ece0;
+  --color-muted: #978c79;
+  --color-faint: #5c5648;
+
+  --color-correct: #2f9e6e;
+  --color-correct-dim: #1f6e4c;
+  --color-correct-soft: #16352a;
+  --color-present: #c9922f;
+  --color-present-dim: #8f6522;
+  --color-present-soft: #332a16;
+  --color-absent: #342f26;
+  --color-danger: #c2492f;
+  --color-danger-soft: #2e1710;
 }
 
 html,
 body {
-  background-color: #0c0a09;
+  background-color: var(--color-ink);
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(47, 158, 110, 0.07), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-correct);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @keyframes tile-flip {

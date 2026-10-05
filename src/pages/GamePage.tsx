@@ -28,6 +28,31 @@ function randomAnswer(): string {
 type Phase = 'auth_checking' | 'auth_blocked' | 'choice' | 'loading_data' | 'onboarding_help' | 'ready';
 type PracticeStatus = 'unknown' | 'checking' | 'allowed' | 'locked' | 'error';
 
+/** The four-tile mark used as both the boot loader and the header wordmark,
+ * so the brand is the game's own tiles rather than a bolted-on logotype. */
+const WordmarkTiles: React.FC<{ size?: 'sm' | 'lg'; animate?: boolean }> = ({ size = 'sm', animate = false }) => {
+  const dims = size === 'lg' ? 'w-9 h-9 text-sm rounded-[6px]' : 'w-6 h-6 text-[11px] rounded-[4px]';
+  const letters = [
+    { l: 'W', cls: 'bg-correct text-paper' },
+    { l: 'O', cls: 'bg-present text-ink' },
+    { l: 'R', cls: 'bg-absent text-faint' },
+    { l: 'D', cls: 'bg-correct text-paper' },
+  ];
+  return (
+    <div className="flex items-center gap-1">
+      {letters.map((t, i) => (
+        <span
+          key={i}
+          className={`${dims} ${t.cls} flex items-center justify-center font-display font-semibold ${animate ? 'animate-tile-pop' : ''}`}
+          style={animate ? { animationDelay: `${i * 120}ms`, animationFillMode: 'backwards' } : undefined}
+        >
+          {t.l}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 export const GamePage: React.FC = () => {
   const [phase, setPhase] = useState<Phase>('auth_checking');
   const [authBlockedReason, setAuthBlockedReason] = useState<'anonymous_disabled' | 'unknown'>('unknown');
@@ -225,22 +250,10 @@ export const GamePage: React.FC = () => {
 
   if (phase === 'auth_checking' || phase === 'loading_data') {
     return (
-      <div className="min-h-screen bg-[#0c0a09] flex flex-col items-center justify-center gap-4">
-        <div className="flex items-center gap-1.5">
-          {['W', 'O', 'R', 'D'].map((l, i) => (
-            <span
-              key={i}
-              className={`w-9 h-9 rounded-md flex items-center justify-center font-display font-bold text-sm animate-tile-pop ${
-                i % 2 === 0 ? 'bg-emerald-700 text-white' : 'bg-amber-600 text-stone-950'
-              }`}
-              style={{ animationDelay: `${i * 120}ms`, animationFillMode: 'backwards' }}
-            >
-              {l}
-            </span>
-          ))}
-        </div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-stone-500">
-          {phase === 'auth_checking' ? "Signing you in…" : "Loading today's puzzle…"}
+      <div className="min-h-screen bg-ink flex flex-col items-center justify-center gap-4">
+        <WordmarkTiles size="lg" animate />
+        <p className="font-mono text-[11px] tracking-wide text-muted">
+          {phase === 'auth_checking' ? 'Signing you in…' : "Loading today's puzzle…"}
         </p>
       </div>
     );
@@ -248,12 +261,12 @@ export const GamePage: React.FC = () => {
 
   if (phase === 'auth_blocked') {
     return (
-      <div className="min-h-screen bg-[#0c0a09] text-stone-100 flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <div className="w-14 h-14 rounded-full bg-rose-950/60 border border-rose-800/60 flex items-center justify-center">
-          <WifiOff className="w-6 h-6 text-rose-400" />
+      <div className="min-h-screen bg-ink text-paper flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="w-14 h-14 rounded-full bg-danger-soft border border-danger/40 flex items-center justify-center">
+          <WifiOff className="w-6 h-6 text-danger" />
         </div>
-        <h1 className="font-display font-bold text-lg">Wordezy is briefly unavailable</h1>
-        <p className="text-sm text-stone-400 max-w-xs">
+        <h1 className="font-display font-semibold text-lg">Wordezy is briefly unavailable</h1>
+        <p className="text-sm text-muted max-w-xs">
           {authBlockedReason === 'anonymous_disabled'
             ? "We're setting up today's game — please check back in a few minutes."
             : "We couldn't connect to the game right now. Check your connection and try again."}
@@ -261,7 +274,7 @@ export const GamePage: React.FC = () => {
         <button
           type="button"
           onClick={bootAuth}
-          className="mt-2 inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-stone-800 hover:bg-stone-700 text-sm font-semibold cursor-pointer"
+          className="mt-2 inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-surface-high hover:bg-rule border border-rule text-sm font-medium cursor-pointer transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Try again
@@ -275,17 +288,17 @@ export const GamePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0c0a09] text-stone-100 flex flex-col">
+    <div className="min-h-screen bg-ink text-paper flex flex-col">
       {/* Header */}
-      <header className="border-b border-stone-800 px-4 py-3 flex items-center justify-between max-w-xl w-full mx-auto">
-        <div className="flex items-center gap-1.5 font-display font-bold text-lg tracking-wide">
-          <span className="text-emerald-500">Word</span>
-          <span className="text-amber-400">ezy</span>
+      <header className="border-b border-rule px-4 py-3 flex items-center justify-between max-w-[420px] w-full mx-auto">
+        <div className="flex items-center gap-2.5">
+          <WordmarkTiles />
+          <span className="font-display font-semibold text-base tracking-wide text-paper">Wordezy</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {mode === 'daily' && (
             <span
-              className="flex items-center gap-1 text-[11px] font-mono font-semibold text-emerald-400 bg-emerald-950/50 border border-emerald-800/60 px-2 py-1 rounded"
+              className="flex items-center gap-1 text-[11px] font-mono font-medium text-correct bg-correct-soft border border-correct-dim/50 px-2 py-1 rounded mr-1"
               title="Current streak"
             >
               <Flame className="w-3 h-3" />
@@ -295,43 +308,43 @@ export const GamePage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowLeaderboard(true)}
-            className="p-2 rounded-full hover:bg-stone-800 text-stone-300 cursor-pointer"
+            className="p-2 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
             aria-label="Speed leaderboard"
           >
-            <Trophy className="w-5 h-5" />
+            <Trophy className="w-[18px] h-[18px]" />
           </button>
           <button
             type="button"
             onClick={() => setShowHelp(true)}
-            className="p-2 rounded-full hover:bg-stone-800 text-stone-300 cursor-pointer"
+            className="p-2 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
             aria-label="How to play"
           >
-            <HelpCircle className="w-5 h-5" />
+            <HelpCircle className="w-[18px] h-[18px]" />
           </button>
           <button
             type="button"
             onClick={() => setShowStats(true)}
-            className="p-2 rounded-full hover:bg-stone-800 text-stone-300 cursor-pointer"
+            className="p-2 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
             aria-label="Statistics"
           >
-            <BarChart3 className="w-5 h-5" />
+            <BarChart3 className="w-[18px] h-[18px]" />
           </button>
         </div>
       </header>
 
       {/* Mode Tabs */}
-      <div className="flex justify-center py-3 px-4">
-        <div className="relative flex items-center bg-stone-900 border border-stone-800 rounded-full p-1 w-full max-w-[280px]">
+      <div className="flex justify-center py-4 px-4">
+        <div className="relative flex items-center bg-surface border border-rule rounded-full p-1 w-full max-w-[260px]">
           <div
-            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full transition-transform duration-200 ease-out ${
-              mode === 'daily' ? 'translate-x-0 bg-emerald-600' : 'translate-x-[calc(100%+8px)] bg-amber-500'
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-surface-high border border-rule transition-transform duration-200 ease-out ${
+              mode === 'daily' ? 'translate-x-0' : 'translate-x-[calc(100%+8px)]'
             }`}
           />
           <button
             type="button"
             onClick={() => setMode('daily')}
-            className={`relative z-10 flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
-              mode === 'daily' ? 'text-white' : 'text-stone-400'
+            className={`relative z-10 flex-1 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
+              mode === 'daily' ? 'text-correct' : 'text-muted'
             }`}
           >
             Daily
@@ -339,8 +352,8 @@ export const GamePage: React.FC = () => {
           <button
             type="button"
             onClick={() => setMode('practice')}
-            className={`relative z-10 flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
-              mode === 'practice' ? 'text-stone-950' : 'text-stone-400'
+            className={`relative z-10 flex-1 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors ${
+              mode === 'practice' ? 'text-present' : 'text-muted'
             }`}
           >
             Practice
@@ -351,35 +364,35 @@ export const GamePage: React.FC = () => {
       {/* Board */}
       <main className="flex-1 flex flex-col items-center justify-center gap-6 px-4 pb-6">
         {practiceLocked ? (
-          <div className="w-full max-w-[320px] sm:max-w-[380px] mx-auto text-center space-y-4 rounded-xl border border-stone-800 bg-stone-900/60 px-5 py-8">
+          <div className="w-full max-w-[320px] sm:max-w-[360px] mx-auto text-center space-y-4 rounded-lg border border-rule bg-surface/60 px-5 py-8">
             {practiceStatus === 'checking' ? (
               <div className="flex justify-center">
-                <div className="w-6 h-6 border-2 border-stone-700 border-t-amber-500 rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-rule border-t-present rounded-full animate-spin" />
               </div>
             ) : (
               <>
-                <div className="w-12 h-12 rounded-full bg-amber-950/40 border border-amber-800/50 flex items-center justify-center mx-auto">
-                  <Lock className="w-5 h-5 text-amber-400" />
+                <div className="w-12 h-12 rounded-full bg-present-soft border border-present-dim/50 flex items-center justify-center mx-auto">
+                  <Lock className="w-5 h-5 text-present" />
                 </div>
                 {practiceStatus === 'error' ? (
                   <>
-                    <p className="text-sm text-stone-300">Couldn't check today's practice availability.</p>
+                    <p className="text-sm text-paper">Couldn't check today's practice availability.</p>
                     <button
                       type="button"
                       onClick={claimPractice}
-                      className="py-2 px-4 rounded-lg bg-stone-800 hover:bg-stone-700 text-sm font-semibold cursor-pointer"
+                      className="py-2 px-4 rounded-md bg-surface-high hover:bg-rule border border-rule text-sm font-medium cursor-pointer transition-colors"
                     >
                       Try again
                     </button>
                   </>
                 ) : (
                   <>
-                    <p className="text-sm text-stone-300">You've used today's practice round.</p>
-                    <p className="text-xs text-stone-500">Ready for the real thing?</p>
+                    <p className="text-sm text-paper">You've used today's practice round.</p>
+                    <p className="text-xs text-muted">Ready for the real thing?</p>
                     <button
                       type="button"
                       onClick={() => setMode('daily')}
-                      className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
+                      className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
                     >
                       Play Daily Challenge
                     </button>
@@ -400,33 +413,31 @@ export const GamePage: React.FC = () => {
 
             {activeRound.status !== 'in_progress' && (
               <div
-                className={`w-full max-w-[320px] sm:max-w-[380px] mx-auto text-center space-y-3 rounded-xl border px-5 py-4 animate-tile-pop ${
-                  activeRound.status === 'won'
-                    ? 'bg-emerald-950/40 border-emerald-800/60'
-                    : 'bg-rose-950/30 border-rose-900/50'
+                className={`w-full max-w-[320px] sm:max-w-[360px] mx-auto text-center space-y-3 rounded-lg border px-5 py-4 animate-tile-pop ${
+                  activeRound.status === 'won' ? 'bg-correct-soft border-correct-dim/50' : 'bg-danger-soft border-danger/40'
                 }`}
               >
-                <p className={`font-display font-bold text-lg ${activeRound.status === 'won' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <p className={`font-display font-semibold text-lg ${activeRound.status === 'won' ? 'text-correct' : 'text-danger'}`}>
                   {activeRound.status === 'won'
                     ? ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'][activeRound.guesses.length - 1] || 'Solved!'
                     : `The word was ${activeRound.solution?.toUpperCase()}`}
                 </p>
                 {activeRound.status === 'won' && (
-                  <p className="text-xs text-stone-400">
+                  <p className="text-xs text-muted">
                     Solved in {activeRound.guesses.length} / {active.maxGuesses}
                     {mode === 'daily' && activeRound.durationMs != null && (
-                      <span className="text-amber-400 font-mono font-semibold"> · {formatDuration(activeRound.durationMs)}</span>
+                      <span className="text-present font-mono font-medium"> · {formatDuration(activeRound.durationMs)}</span>
                     )}
                   </p>
                 )}
                 <div className="flex items-center justify-center gap-2 pt-1">
                   {mode === 'practice' ? (
                     <>
-                      <p className="text-xs text-stone-500">Come back tomorrow for another practice round.</p>
+                      <p className="text-xs text-muted">Come back tomorrow for another practice round.</p>
                       <button
                         type="button"
                         onClick={() => setMode('daily')}
-                        className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
+                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
                       >
                         Play Daily
                       </button>
@@ -436,11 +447,11 @@ export const GamePage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => (activeRound.status === 'won' ? setShowLeaderboard(true) : setShowStats(true))}
-                        className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
+                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
                       >
-                        {activeRound.status === 'won' ? 'View Leaderboard' : 'View Stats'}
+                        {activeRound.status === 'won' ? 'View leaderboard' : 'View stats'}
                       </button>
-                      <p className="text-xs text-stone-500">Next word at midnight UTC</p>
+                      <p className="text-xs text-muted">Next word at midnight UTC</p>
                     </>
                   )}
                 </div>

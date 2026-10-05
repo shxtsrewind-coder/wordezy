@@ -4,10 +4,10 @@ import { KEYBOARD_ROWS } from '../lib/wordle.ts';
 import type { KeyStatus } from '../lib/wordle.ts';
 
 const KEY_COLORS: Record<KeyStatus, string> = {
-  correct: 'bg-emerald-600 text-white',
-  present: 'bg-amber-500 text-stone-950',
-  absent: 'bg-stone-800 text-stone-500',
-  unused: 'bg-stone-700 text-stone-100 hover:bg-stone-600',
+  correct: 'bg-correct text-paper',
+  present: 'bg-present text-ink',
+  absent: 'bg-absent text-faint',
+  unused: 'bg-surface-high text-paper hover:bg-rule',
 };
 
 interface KeyboardProps {
@@ -30,7 +30,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyStatuses, onKeyPress, dis
                 type="button"
                 disabled={disabled}
                 onClick={() => onKeyPress(key)}
-                className={`${isWide ? 'flex-[1.6] text-[10px]' : 'flex-1 text-xs sm:text-sm'} h-12 sm:h-14 rounded-md font-bold uppercase flex items-center justify-center transition-all duration-100 cursor-pointer active:scale-90 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm ${KEY_COLORS[status]}`}
+                className={`${isWide ? 'flex-[1.6] text-[10px]' : 'flex-1 text-xs sm:text-sm'} h-12 sm:h-14 rounded-md font-semibold uppercase flex items-center justify-center transition-all duration-100 cursor-pointer active:scale-90 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 ${KEY_COLORS[status]}`}
               >
                 {key === 'BACKSPACE' ? (
                   <Delete className="w-4 h-4" />

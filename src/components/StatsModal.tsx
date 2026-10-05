@@ -63,38 +63,38 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, onClose, shareTex
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-stone-900 border border-stone-800 rounded-xl p-5 space-y-5 shadow-2xl">
-        <div className="flex items-center justify-between pb-2 border-b border-stone-800">
-          <h2 className="font-display font-bold text-stone-100">Statistics</h2>
-          <button type="button" onClick={onClose} className="text-stone-400 hover:text-stone-200 cursor-pointer">
+      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-5 shadow-xl shadow-black/40">
+        <div className="flex items-center justify-between pb-2 border-b border-rule">
+          <h2 className="font-display font-semibold text-paper">Statistics</h2>
+          <button type="button" onClick={onClose} className="text-muted hover:text-paper cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {!stats ? (
-          <p className="text-sm text-stone-400 text-center py-4">Play your first round to start tracking stats.</p>
+          <p className="text-sm text-muted text-center py-4">Play your first round to start tracking stats.</p>
         ) : (
           <>
             <div className="grid grid-cols-4 gap-2 text-center">
               <div>
-                <div className="text-2xl font-bold font-mono text-stone-100">{stats.games_played}</div>
-                <div className="text-[10px] uppercase text-stone-500 tracking-wide">Played</div>
+                <div className="text-2xl font-semibold font-mono text-paper">{stats.games_played}</div>
+                <div className="text-[11px] text-muted">Played</div>
               </div>
               <div>
-                <div className="text-2xl font-bold font-mono text-stone-100">{winPct}</div>
-                <div className="text-[10px] uppercase text-stone-500 tracking-wide">Win %</div>
+                <div className="text-2xl font-semibold font-mono text-paper">{winPct}</div>
+                <div className="text-[11px] text-muted">Win %</div>
               </div>
               <div>
-                <div className="text-2xl font-bold font-mono text-emerald-400">{stats.current_streak}</div>
-                <div className="text-[10px] uppercase text-stone-500 tracking-wide">Streak</div>
+                <div className="text-2xl font-semibold font-mono text-correct">{stats.current_streak}</div>
+                <div className="text-[11px] text-muted">Streak</div>
               </div>
               <div>
-                <div className="text-2xl font-bold font-mono text-stone-100">{stats.max_streak}</div>
-                <div className="text-[10px] uppercase text-stone-500 tracking-wide">Max</div>
+                <div className="text-2xl font-semibold font-mono text-paper">{stats.max_streak}</div>
+                <div className="text-[11px] text-muted">Max</div>
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 text-xs text-sky-300">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-present">
               <Snowflake className="w-3.5 h-3.5" />
               <span>
                 {stats.streak_freezes} streak freeze{stats.streak_freezes === 1 ? '' : 's'} available
@@ -102,13 +102,13 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, onClose, shareTex
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-[11px] uppercase font-mono text-stone-500 tracking-wider">Guess Distribution</h3>
+              <h3 className="text-[11px] font-mono text-muted">Guess distribution</h3>
               {stats.guess_distribution.map((count, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
-                  <span className="w-3 text-stone-400 font-mono">{i + 1}</span>
-                  <div className="flex-1 h-5 bg-stone-800 rounded overflow-hidden">
+                  <span className="w-3 text-muted font-mono">{i + 1}</span>
+                  <div className="flex-1 h-5 bg-absent rounded-[4px] overflow-hidden">
                     <div
-                      className="h-full bg-emerald-600 flex items-center justify-end px-1.5 text-[11px] font-mono text-white min-w-[22px]"
+                      className="h-full bg-correct flex items-center justify-end px-1.5 text-[11px] font-mono text-paper min-w-[22px]"
                       style={{ width: `${Math.max(8, (count / maxDist) * 100)}%` }}
                     >
                       {count}
@@ -121,19 +121,19 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, onClose, shareTex
         )}
 
         {showCountdown && (
-          <div className="pt-3 border-t border-stone-800 flex items-center justify-between">
+          <div className="pt-3 border-t border-rule flex items-center justify-between">
             <div>
-              <div className="text-[10px] uppercase text-stone-500 tracking-wide">Next Word</div>
-              <div className="font-mono font-bold text-stone-100">{formatCountdown(countdown)}</div>
+              <div className="text-[11px] text-muted">Next word</div>
+              <div className="font-mono font-semibold text-paper">{formatCountdown(countdown)}</div>
             </div>
             {shareText && (
               <button
                 type="button"
                 onClick={handleShare}
-                className="py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold flex items-center gap-1.5 cursor-pointer"
+                className="py-2 px-4 rounded-md bg-correct hover:bg-correct-dim text-paper text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <Share2 className="w-4 h-4" />
-                {copied ? 'Copied!' : 'Share'}
+                {copied ? 'Copied' : 'Share'}
               </button>
             )}
           </div>
