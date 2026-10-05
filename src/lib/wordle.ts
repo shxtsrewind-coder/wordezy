@@ -80,3 +80,15 @@ export function buildShareText(opts: {
   const scoreLabel = attempt ? `${attempt}/6` : 'X/6';
   return `${title} ${scoreLabel}\n\n${grid}\n\n${url}`;
 }
+
+/** Formats a duration in milliseconds as m:ss (or h:mm:ss past an hour). */
+export function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${m}:${String(s).padStart(2, '0')}`;
+}

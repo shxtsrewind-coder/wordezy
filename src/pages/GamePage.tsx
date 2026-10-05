@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { HelpCircle, BarChart3, Flame, WifiOff, RefreshCw } from 'lucide-react';
+import { HelpCircle, BarChart3, Flame, WifiOff, RefreshCw, Trophy, Lock } from 'lucide-react';
 import { supabase, ensureSession, parseSupabaseError } from '../lib/supabase.ts';
 import { ANSWER_WORDS } from '../data/answers.ts';
-import { computeFeedback, buildShareText } from '../lib/wordle.ts';
+import { computeFeedback, buildShareText, formatDuration } from '../lib/wordle.ts';
 import type { RoundState, SubmitResult } from '../hooks/useWordleGame.ts';
 import { emptyRoundState, useWordleGame } from '../hooks/useWordleGame.ts';
 import { Board } from '../components/Board.tsx';
@@ -11,6 +11,11 @@ import { Toast } from '../components/Toast.tsx';
 import { HelpModal } from '../components/HelpModal.tsx';
 import { StatsModal } from '../components/StatsModal.tsx';
 import type { ProfileStats } from '../components/StatsModal.tsx';
+import { AuthModal } from '../components/AuthModal.tsx';
+import { LeaderboardModal } from '../components/LeaderboardModal.tsx';
+
+const PLAY_CHOICE_KEY = 'wordezy_play_choice_completed';
+const SEEN_HELP_KEY = 'wordezy_seen_how_to_play';
 
 function todayUtc(): string {
   return new Date().toISOString().slice(0, 10);
@@ -20,16 +25,26 @@ function randomAnswer(): string {
   return ANSWER_WORDS[Math.floor(Math.random() * ANSWER_WORDS.length)];
 }
 
+type Phase = 'auth_checking' | 'auth_blocked' | 'choice' | 'loading_data' | 'onboarding_help' | 'ready';
+type PracticeStatus = 'unknown' | 'checking' | 'allowed' | 'locked' | 'error';
+
 export const GamePage: React.FC = () => {
+  const [phase, setPhase] = useState<Phase>('auth_checking');
+  const [authBlockedReason, setAuthBlockedReason] = useState<'anonymous_disabled' | 'unknown'>('unknown');
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [displayName, setDisplayName] = useState('Player');
+
   const [mode, setMode] = useState<'daily' | 'practice'>('daily');
   const [dailyRound, setDailyRound] = useState<RoundState>(emptyRoundState());
   const [practiceRound, setPracticeRound] = useState<RoundState>(emptyRoundState());
-  const [practiceWord, setPracticeWord] = useState(() => randomAnswer());
+  const [practiceWord, setPracticeWord] = useState<string | null>(null);
+  const [practiceStatus, setPracticeStatus] = useState<PracticeStatus>('unknown');
+
   const [profile, setProfile] = useState<ProfileStats | null>(null);
-  const [initializing, setInitializing] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
-  const [authBlocked, setAuthBlocked] = useState<'anonymous_disabled' | 'unknown' | null>(null);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const challengeDate = useRef(todayUtc());
 
   const refreshProfile = useCallback(async () => {
@@ -40,15 +55,9 @@ export const GamePage: React.FC = () => {
     if (data) setProfile(data as ProfileStats);
   }, []);
 
-  const boot = useCallback(async () => {
-    setInitializing(true);
-    setAuthBlocked(null);
+  const loadGameData = useCallback(async () => {
+    setPhase('loading_data');
     try {
-      const session = await ensureSession();
-      if (!session.ok) {
-        setAuthBlocked(session.reason || 'unknown');
-        return;
-      }
       const { data, error } = await supabase.rpc('wordlock_get_today', { p_date: challengeDate.current });
       if (error) throw error;
       if (data) {
@@ -57,22 +66,98 @@ export const GamePage: React.FC = () => {
           feedback: (data.feedback as any[]) || [],
           status: data.status === 'not_started' ? 'in_progress' : data.status,
           solution: data.solution || null,
+          durationMs: data.duration_ms ?? null,
         });
       }
       await refreshProfile();
+      const seenHelp = typeof window !== 'undefined' && localStorage.getItem(SEEN_HELP_KEY) === 'true';
+      setPhase(seenHelp ? 'ready' : 'onboarding_help');
     } catch (err) {
       console.error('Failed to load today’s round:', err);
-      setAuthBlocked('unknown');
-    } finally {
-      setInitializing(false);
+      setAuthBlockedReason('unknown');
+      setPhase('auth_blocked');
     }
   }, [refreshProfile]);
 
-  // Boot: sign in anonymously if needed, then load today's daily state + profile.
+  const bootAuth = useCallback(async () => {
+    setPhase('auth_checking');
+    try {
+      const session = await ensureSession();
+      if (!session.ok) {
+        setAuthBlockedReason(session.reason || 'unknown');
+        setPhase('auth_blocked');
+        return;
+      }
+
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id ?? null;
+      const anon = userData.user?.is_anonymous ?? true;
+      setUserId(uid);
+      setIsAnonymous(anon);
+
+      if (uid) {
+        const { data: profileRow } = await supabase.from('profiles').select('display_name').eq('id', uid).maybeSingle();
+        if (profileRow?.display_name) setDisplayName(profileRow.display_name);
+      }
+
+      const choiceDone = typeof window !== 'undefined' && sessionStorage.getItem(PLAY_CHOICE_KEY) === 'true';
+      if (!anon || choiceDone) {
+        await loadGameData();
+      } else {
+        setPhase('choice');
+      }
+    } catch (err) {
+      console.error('Failed to establish session:', err);
+      setAuthBlockedReason('unknown');
+      setPhase('auth_blocked');
+    }
+  }, [loadGameData]);
+
   useEffect(() => {
-    boot();
+    bootAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleAuthResolved = useCallback(
+    (opts: { isAnonymous: boolean; displayName?: string; countryCode?: string | null }) => {
+      if (typeof window !== 'undefined') sessionStorage.setItem(PLAY_CHOICE_KEY, 'true');
+      setIsAnonymous(opts.isAnonymous);
+      if (opts.displayName) setDisplayName(opts.displayName);
+      loadGameData();
+    },
+    [loadGameData]
+  );
+
+  const handleOnboardingHelpClose = useCallback(() => {
+    if (typeof window !== 'undefined') localStorage.setItem(SEEN_HELP_KEY, 'true');
+    setPhase('ready');
+  }, []);
+
+  const claimPractice = useCallback(async () => {
+    setPracticeStatus('checking');
+    try {
+      const { data, error } = await supabase.rpc('wordlock_claim_practice', { p_date: todayUtc() });
+      if (error) throw error;
+      if (data?.allowed) {
+        setPracticeWord(randomAnswer());
+        setPracticeRound(emptyRoundState());
+        setPracticeStatus('allowed');
+      } else {
+        setPracticeStatus('locked');
+      }
+    } catch (err) {
+      console.error('Failed to check practice availability:', err);
+      setPracticeStatus('error');
+    }
+  }, []);
+
+  // Practice is limited to one round/day, enforced server-side; claim it the
+  // first time the player switches into the tab each session.
+  useEffect(() => {
+    if (phase === 'ready' && mode === 'practice' && practiceStatus === 'unknown') {
+      claimPractice();
+    }
+  }, [phase, mode, practiceStatus, claimPractice]);
 
   const resolveDailyGuess = useCallback(
     async (guess: string): Promise<SubmitResult> => {
@@ -88,6 +173,7 @@ export const GamePage: React.FC = () => {
         feedback: data.feedback,
         status: data.status,
         solution: data.solution || null,
+        durationMs: data.duration_ms ?? null,
       };
     },
     [refreshProfile]
@@ -95,11 +181,12 @@ export const GamePage: React.FC = () => {
 
   const resolvePracticeGuess = useCallback(
     async (guess: string): Promise<SubmitResult> => {
-      const feedback = computeFeedback(guess, practiceWord);
-      const won = guess === practiceWord;
+      const word = practiceWord || randomAnswer();
+      const feedback = computeFeedback(guess, word);
+      const won = guess === word;
       const nextAttempt = practiceRound.guesses.length + 1;
       const status = won ? 'won' : nextAttempt >= 6 ? 'lost' : 'in_progress';
-      return { feedback, status, solution: status !== 'in_progress' ? practiceWord : null };
+      return { feedback, status, solution: status !== 'in_progress' ? word : null };
     },
     [practiceWord, practiceRound.guesses.length]
   );
@@ -109,10 +196,11 @@ export const GamePage: React.FC = () => {
 
   const active = mode === 'daily' ? dailyGame : practiceGame;
   const activeRound = mode === 'daily' ? dailyRound : practiceRound;
+  const practiceLocked = mode === 'practice' && (practiceStatus === 'locked' || practiceStatus === 'checking' || practiceStatus === 'error');
 
   // Physical keyboard support
   useEffect(() => {
-    if (showHelp || showStats) return;
+    if (phase !== 'ready' || showHelp || showStats || showLeaderboard || practiceLocked) return;
     const handler = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const key = e.key.toUpperCase();
@@ -123,12 +211,7 @@ export const GamePage: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [active, showHelp, showStats]);
-
-  const startNewPracticeRound = () => {
-    setPracticeWord(randomAnswer());
-    setPracticeRound(emptyRoundState());
-  };
+  }, [active, phase, showHelp, showStats, showLeaderboard, practiceLocked]);
 
   const shareText = useMemo(() => {
     if (mode !== 'daily' || dailyRound.status === 'in_progress') return null;
@@ -140,7 +223,7 @@ export const GamePage: React.FC = () => {
     });
   }, [mode, dailyRound]);
 
-  if (initializing) {
+  if (phase === 'auth_checking' || phase === 'loading_data') {
     return (
       <div className="min-h-screen bg-[#0c0a09] flex flex-col items-center justify-center gap-4">
         <div className="flex items-center gap-1.5">
@@ -156,12 +239,14 @@ export const GamePage: React.FC = () => {
             </span>
           ))}
         </div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-stone-500">Loading today's puzzle&hellip;</p>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-stone-500">
+          {phase === 'auth_checking' ? "Signing you in…" : "Loading today's puzzle…"}
+        </p>
       </div>
     );
   }
 
-  if (authBlocked) {
+  if (phase === 'auth_blocked') {
     return (
       <div className="min-h-screen bg-[#0c0a09] text-stone-100 flex flex-col items-center justify-center gap-4 px-6 text-center">
         <div className="w-14 h-14 rounded-full bg-rose-950/60 border border-rose-800/60 flex items-center justify-center">
@@ -169,13 +254,13 @@ export const GamePage: React.FC = () => {
         </div>
         <h1 className="font-display font-bold text-lg">Wordezy is briefly unavailable</h1>
         <p className="text-sm text-stone-400 max-w-xs">
-          {authBlocked === 'anonymous_disabled'
+          {authBlockedReason === 'anonymous_disabled'
             ? "We're setting up today's game — please check back in a few minutes."
             : "We couldn't connect to the game right now. Check your connection and try again."}
         </p>
         <button
           type="button"
-          onClick={boot}
+          onClick={bootAuth}
           className="mt-2 inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-stone-800 hover:bg-stone-700 text-sm font-semibold cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
@@ -183,6 +268,10 @@ export const GamePage: React.FC = () => {
         </button>
       </div>
     );
+  }
+
+  if (phase === 'choice') {
+    return <AuthModal userId={userId} currentDisplayName={displayName} onResolved={handleAuthResolved} />;
   }
 
   return (
@@ -203,6 +292,14 @@ export const GamePage: React.FC = () => {
               {profile?.current_streak ?? 0}
             </span>
           )}
+          <button
+            type="button"
+            onClick={() => setShowLeaderboard(true)}
+            className="p-2 rounded-full hover:bg-stone-800 text-stone-300 cursor-pointer"
+            aria-label="Speed leaderboard"
+          >
+            <Trophy className="w-5 h-5" />
+          </button>
           <button
             type="button"
             onClick={() => setShowHelp(true)}
@@ -253,62 +350,110 @@ export const GamePage: React.FC = () => {
 
       {/* Board */}
       <main className="flex-1 flex flex-col items-center justify-center gap-6 px-4 pb-6">
-        <Board
-          guesses={activeRound.guesses}
-          feedback={activeRound.feedback}
-          currentGuess={active.currentGuess}
-          shakeRow={active.shakeRow}
-          justSubmittedRow={active.justSubmittedRow}
-        />
-
-        {activeRound.status !== 'in_progress' && (
-          <div
-            className={`w-full max-w-[320px] sm:max-w-[380px] mx-auto text-center space-y-3 rounded-xl border px-5 py-4 animate-tile-pop ${
-              activeRound.status === 'won'
-                ? 'bg-emerald-950/40 border-emerald-800/60'
-                : 'bg-rose-950/30 border-rose-900/50'
-            }`}
-          >
-            <p className={`font-display font-bold text-lg ${activeRound.status === 'won' ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {activeRound.status === 'won'
-                ? ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'][activeRound.guesses.length - 1] || 'Solved!'
-                : `The word was ${activeRound.solution?.toUpperCase()}`}
-            </p>
-            {activeRound.status === 'won' && (
-              <p className="text-xs text-stone-400">
-                Solved in {activeRound.guesses.length} / {dailyGame.maxGuesses}
-              </p>
+        {practiceLocked ? (
+          <div className="w-full max-w-[320px] sm:max-w-[380px] mx-auto text-center space-y-4 rounded-xl border border-stone-800 bg-stone-900/60 px-5 py-8">
+            {practiceStatus === 'checking' ? (
+              <div className="flex justify-center">
+                <div className="w-6 h-6 border-2 border-stone-700 border-t-amber-500 rounded-full animate-spin" />
+              </div>
+            ) : (
+              <>
+                <div className="w-12 h-12 rounded-full bg-amber-950/40 border border-amber-800/50 flex items-center justify-center mx-auto">
+                  <Lock className="w-5 h-5 text-amber-400" />
+                </div>
+                {practiceStatus === 'error' ? (
+                  <>
+                    <p className="text-sm text-stone-300">Couldn't check today's practice availability.</p>
+                    <button
+                      type="button"
+                      onClick={claimPractice}
+                      className="py-2 px-4 rounded-lg bg-stone-800 hover:bg-stone-700 text-sm font-semibold cursor-pointer"
+                    >
+                      Try again
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-stone-300">You've used today's practice round.</p>
+                    <p className="text-xs text-stone-500">Ready for the real thing?</p>
+                    <button
+                      type="button"
+                      onClick={() => setMode('daily')}
+                      className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
+                    >
+                      Play Daily Challenge
+                    </button>
+                  </>
+                )}
+              </>
             )}
-            <div className="flex items-center justify-center gap-2 pt-1">
-              {mode === 'practice' ? (
-                <button
-                  type="button"
-                  onClick={startNewPracticeRound}
-                  className="py-2 px-5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-sm cursor-pointer transition-colors"
-                >
-                  Play Another
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setShowStats(true)}
-                    className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
-                  >
-                    View Stats
-                  </button>
-                  <p className="text-xs text-stone-500">Next word at midnight UTC</p>
-                </>
-              )}
-            </div>
           </div>
-        )}
+        ) : (
+          <>
+            <Board
+              guesses={activeRound.guesses}
+              feedback={activeRound.feedback}
+              currentGuess={active.currentGuess}
+              shakeRow={active.shakeRow}
+              justSubmittedRow={active.justSubmittedRow}
+            />
 
-        <Keyboard
-          keyStatuses={active.keyStatuses}
-          onKeyPress={active.onKeyPress}
-          disabled={activeRound.status !== 'in_progress' || active.submitting}
-        />
+            {activeRound.status !== 'in_progress' && (
+              <div
+                className={`w-full max-w-[320px] sm:max-w-[380px] mx-auto text-center space-y-3 rounded-xl border px-5 py-4 animate-tile-pop ${
+                  activeRound.status === 'won'
+                    ? 'bg-emerald-950/40 border-emerald-800/60'
+                    : 'bg-rose-950/30 border-rose-900/50'
+                }`}
+              >
+                <p className={`font-display font-bold text-lg ${activeRound.status === 'won' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {activeRound.status === 'won'
+                    ? ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'][activeRound.guesses.length - 1] || 'Solved!'
+                    : `The word was ${activeRound.solution?.toUpperCase()}`}
+                </p>
+                {activeRound.status === 'won' && (
+                  <p className="text-xs text-stone-400">
+                    Solved in {activeRound.guesses.length} / {active.maxGuesses}
+                    {mode === 'daily' && activeRound.durationMs != null && (
+                      <span className="text-amber-400 font-mono font-semibold"> · {formatDuration(activeRound.durationMs)}</span>
+                    )}
+                  </p>
+                )}
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  {mode === 'practice' ? (
+                    <>
+                      <p className="text-xs text-stone-500">Come back tomorrow for another practice round.</p>
+                      <button
+                        type="button"
+                        onClick={() => setMode('daily')}
+                        className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
+                      >
+                        Play Daily
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => (activeRound.status === 'won' ? setShowLeaderboard(true) : setShowStats(true))}
+                        className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
+                      >
+                        {activeRound.status === 'won' ? 'View Leaderboard' : 'View Stats'}
+                      </button>
+                      <p className="text-xs text-stone-500">Next word at midnight UTC</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <Keyboard
+              keyStatuses={active.keyStatuses}
+              onKeyPress={active.onKeyPress}
+              disabled={activeRound.status !== 'in_progress' || active.submitting}
+            />
+          </>
+        )}
       </main>
 
       <Toast message={active.toast} variant={active.toastVariant} />
@@ -321,6 +466,8 @@ export const GamePage: React.FC = () => {
           showCountdown={mode === 'daily'}
         />
       )}
+      {showLeaderboard && <LeaderboardModal userId={userId} onClose={() => setShowLeaderboard(false)} />}
+      {phase === 'onboarding_help' && <HelpModal onClose={handleOnboardingHelpClose} />}
     </div>
   );
 };

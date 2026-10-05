@@ -11,16 +11,19 @@ export interface RoundState {
   feedback: LetterStatus[][];
   status: GameStatus;
   solution: string | null;
+  /** Milliseconds between the round starting and finishing (Daily only; null until won/lost). */
+  durationMs: number | null;
 }
 
 export interface SubmitResult {
   feedback: LetterStatus[];
   status: GameStatus;
   solution: string | null;
+  durationMs?: number | null;
 }
 
 export function emptyRoundState(): RoundState {
-  return { guesses: [], feedback: [], status: 'in_progress', solution: null };
+  return { guesses: [], feedback: [], status: 'in_progress', solution: null, durationMs: null };
 }
 
 /**
@@ -83,6 +86,7 @@ export function useWordleGame(
             feedback: [...prev.feedback, result.feedback],
             status: result.status,
             solution: result.solution ?? prev.solution,
+            durationMs: result.durationMs ?? prev.durationMs,
           }));
           setCurrentGuess('');
           setJustSubmittedRow(rowIdx);

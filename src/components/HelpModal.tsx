@@ -41,7 +41,12 @@ export const HelpModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             player. Keep your streak alive by playing every day.
           </p>
           <p>
-            <strong className="text-stone-200">Practice</strong> — play as many random rounds as you like, anytime.
+            <strong className="text-stone-200">Practice</strong> — one warm-up round a day, so you can limber up
+            before you commit to the daily word.
+          </p>
+          <p>
+            <strong className="text-stone-200">Speed Leaderboard</strong> — your timer starts the moment you open
+            the daily puzzle. Solve it fastest to top today's board, or set an all-time personal best.
           </p>
           <p>
             Every 7-day streak earns you a <strong className="text-stone-200">Streak Freeze</strong> (up to 2) —
