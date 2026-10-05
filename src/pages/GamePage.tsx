@@ -13,6 +13,7 @@ import { StatsModal } from '../components/StatsModal.tsx';
 import type { ProfileStats } from '../components/StatsModal.tsx';
 import { AuthModal } from '../components/AuthModal.tsx';
 import { LeaderboardModal } from '../components/LeaderboardModal.tsx';
+import { ACHIEVEMENTS, computeAchievements } from '../lib/achievements.ts';
 
 const PLAY_CHOICE_KEY = 'wordezy_play_choice_completed';
 const SEEN_HELP_KEY = 'wordezy_seen_how_to_play';
@@ -271,6 +272,9 @@ export const GamePage: React.FC = () => {
     return () => window.removeEventListener('keydown', handler);
   }, [active, phase, showHelp, showStats, showLeaderboard, practiceLocked]);
 
+  const achievements = useMemo(() => (profile ? computeAchievements(profile) : []), [profile]);
+  const earnedCount = achievements.filter((a) => a.earned).length;
+
   const shareText = useMemo(() => {
     if (mode !== 'daily' || dailyRound.status === 'in_progress') return null;
     return buildShareText({
@@ -332,12 +336,24 @@ export const GamePage: React.FC = () => {
         <div className="flex items-center gap-1">
           {mode === 'daily' && (
             <span
-              className="flex items-center gap-1 text-[11px] font-mono font-medium text-correct bg-correct-soft border border-correct-dim/50 px-2 py-1 rounded mr-1"
+              className="flex items-center gap-1 text-[11px] font-mono font-medium text-correct bg-correct-soft border border-correct-dim/50 px-2 py-1 rounded"
               title="Current streak"
             >
               <Flame className="w-3 h-3" />
               {profile?.current_streak ?? 0}
             </span>
+          )}
+          {profile && (
+            <button
+              type="button"
+              onClick={() => setShowStats(true)}
+              className="flex items-center gap-1 text-[11px] font-mono font-medium text-present bg-present-soft border border-present-dim/50 px-2 py-1 rounded mr-1 cursor-pointer hover:border-present transition-colors"
+              title="Achievements earned"
+              aria-label={`${earnedCount} of ${ACHIEVEMENTS.length} achievements earned`}
+            >
+              <Trophy className="w-3 h-3" />
+              {earnedCount}/{ACHIEVEMENTS.length}
+            </button>
           )}
           <button
             type="button"
@@ -506,6 +522,7 @@ export const GamePage: React.FC = () => {
       {showStats && (
         <StatsModal
           stats={profile}
+          achievements={achievements}
           onClose={() => setShowStats(false)}
           shareText={shareText}
           showCountdown={mode === 'daily'}

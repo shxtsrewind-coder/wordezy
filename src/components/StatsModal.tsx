@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Share2, Snowflake } from 'lucide-react';
+import type { AchievementState } from '../lib/achievements.ts';
 
 export interface ProfileStats {
   games_played: number;
@@ -28,12 +29,13 @@ function formatCountdown(ms: number): string {
 
 interface StatsModalProps {
   stats: ProfileStats | null;
+  achievements?: AchievementState[];
   onClose: () => void;
   shareText?: string | null;
   showCountdown?: boolean;
 }
 
-export const StatsModal: React.FC<StatsModalProps> = ({ stats, onClose, shareText, showCountdown }) => {
+export const StatsModal: React.FC<StatsModalProps> = ({ stats, achievements = [], onClose, shareText, showCountdown }) => {
   const [countdown, setCountdown] = useState(msUntilNextUtcMidnight());
   const [copied, setCopied] = useState(false);
 
@@ -63,7 +65,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, onClose, shareTex
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-5 shadow-xl shadow-black/40">
+      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-5 shadow-xl shadow-black/40 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-2 border-b border-rule">
           <h2 className="font-display font-semibold text-paper">Statistics</h2>
           <button type="button" onClick={onClose} className="text-muted hover:text-paper cursor-pointer">
@@ -117,6 +119,34 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, onClose, shareTex
                 </div>
               ))}
             </div>
+
+            {achievements.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-[11px] font-mono text-muted">
+                  Achievements &middot; {achievements.filter((a) => a.earned).length}/{achievements.length}
+                </h3>
+                <div className="grid grid-cols-5 gap-2">
+                  {achievements.map((a) => (
+                    <div
+                      key={a.id}
+                      title={`${a.label} — ${a.description}${a.earned ? ' (earned)' : ` (${a.value}/${a.goal})`}`}
+                      className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 border ${
+                        a.earned
+                          ? 'bg-present-soft border-present-dim/60'
+                          : 'bg-ink border-rule opacity-50'
+                      }`}
+                    >
+                      <span className={`text-lg leading-none ${a.earned ? '' : 'grayscale'}`}>{a.mark}</span>
+                      {!a.earned && (
+                        <span className="text-[8px] font-mono text-muted leading-none">
+                          {a.value}/{a.goal}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
