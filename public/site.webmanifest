@@ -1,0 +1,39 @@
+{
+  "name": "Wordezy — Daily Word Guessing Game",
+  "short_name": "Wordezy",
+  "description": "Guess the 5-letter word in 6 tries. One new word every day, shared by every player — plus unlimited practice rounds anytime.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0a08",
+  "theme_color": "#0b0a08",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Play today's puzzle",
+      "short_name": "Play",
+      "url": "/",
+      "description": "Jump straight into today's daily word"
+    }
+  ]
+}
