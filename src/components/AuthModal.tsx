@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, User, AlertCircle, ArrowRight, ArrowLeft, RefreshCw, Trophy, Smartphone } from 'lucide-react';
 import { supabase, parseSupabaseError } from '../lib/supabase.ts';
-import { validateDisplayNameFormat, checkDisplayNameTaken } from '../lib/authHelpers.ts';
+import { validateDisplayNameFormat } from '../lib/authHelpers.ts';
 import { CountrySelect } from './CountrySelect.tsx';
 import { getUserCountryCode, setUserCountry } from '../lib/countryFlags.ts';
 
@@ -65,16 +65,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ userId, currentDisplayName
 
     setIsSubmitting(true);
     try {
-      const takenCheck = await checkDisplayNameTaken(trimmedName, userId);
-      if (takenCheck.taken) {
-        setErrorMsg('That name is taken, try another');
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (userId) {
-        await supabase.from('profiles').upsert({ id: userId, display_name: trimmedName, country_code: selectedCode });
-      }
+      // wordlock_update_profile re-checks uniqueness server-side too (RLS means a
+      // client-side SELECT can never see other players' rows to check against).
+      const { error: profileError } = await supabase.rpc('wordlock_update_profile', {
+        p_display_name: trimmedName,
+        p_country_code: selectedCode,
+      });
+      if (profileError) throw profileError;
       setUserCountry(selectedCode);
 
       const { error: authError } = await supabase.auth.updateUser({ email: trimmedEmail, password });

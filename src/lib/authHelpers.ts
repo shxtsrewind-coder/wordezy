@@ -24,7 +24,10 @@ export function validateDisplayNameFormat(name: string): { valid: boolean; error
 }
 
 /**
- * Checks if a display name is already taken by another player.
+ * Checks if a display name is already taken by another player. Goes through
+ * the wordlock_check_display_name_taken RPC rather than querying `profiles`
+ * directly — RLS only lets a client SELECT its own profile row, so a direct
+ * query can never see other players' names.
  */
 export async function checkDisplayNameTaken(
   name: string,
@@ -35,10 +38,12 @@ export async function checkDisplayNameTaken(
   if (!formatCheck.valid) return { taken: false, error: formatCheck.error };
 
   try {
-    let query = supabase.from('profiles').select('id, display_name').ilike('display_name', trimmed);
-    if (excludeUserId) query = query.neq('id', excludeUserId);
-    const { data } = await query.maybeSingle();
-    if (data && data.id) return { taken: true, error: 'That name is taken, try another' };
+    const { data, error } = await supabase.rpc('wordlock_check_display_name_taken', {
+      p_name: trimmed,
+      p_exclude_id: excludeUserId || null,
+    });
+    if (error) throw error;
+    if (data) return { taken: true, error: 'That name is taken, try another' };
     return { taken: false };
   } catch (err) {
     console.warn('Display name check exception:', err);
