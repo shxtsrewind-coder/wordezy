@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { HelpCircle, BarChart3 } from 'lucide-react';
+import { HelpCircle, BarChart3, Flame, WifiOff, RefreshCw } from 'lucide-react';
 import { supabase, ensureSession, parseSupabaseError } from '../lib/supabase.ts';
 import { ANSWER_WORDS } from '../data/answers.ts';
 import { computeFeedback, buildShareText } from '../lib/wordle.ts';
@@ -29,6 +29,7 @@ export const GamePage: React.FC = () => {
   const [initializing, setInitializing] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [authBlocked, setAuthBlocked] = useState<'anonymous_disabled' | 'unknown' | null>(null);
   const challengeDate = useRef(todayUtc());
 
   const refreshProfile = useCallback(async () => {
@@ -39,29 +40,39 @@ export const GamePage: React.FC = () => {
     if (data) setProfile(data as ProfileStats);
   }, []);
 
+  const boot = useCallback(async () => {
+    setInitializing(true);
+    setAuthBlocked(null);
+    try {
+      const session = await ensureSession();
+      if (!session.ok) {
+        setAuthBlocked(session.reason || 'unknown');
+        return;
+      }
+      const { data, error } = await supabase.rpc('wordlock_get_today', { p_date: challengeDate.current });
+      if (error) throw error;
+      if (data) {
+        setDailyRound({
+          guesses: (data.guesses as string[]) || [],
+          feedback: (data.feedback as any[]) || [],
+          status: data.status === 'not_started' ? 'in_progress' : data.status,
+          solution: data.solution || null,
+        });
+      }
+      await refreshProfile();
+    } catch (err) {
+      console.error('Failed to load today’s round:', err);
+      setAuthBlocked('unknown');
+    } finally {
+      setInitializing(false);
+    }
+  }, [refreshProfile]);
+
   // Boot: sign in anonymously if needed, then load today's daily state + profile.
   useEffect(() => {
-    (async () => {
-      try {
-        await ensureSession();
-        const { data, error } = await supabase.rpc('wordlock_get_today', { p_date: challengeDate.current });
-        if (error) throw error;
-        if (data) {
-          setDailyRound({
-            guesses: (data.guesses as string[]) || [],
-            feedback: (data.feedback as any[]) || [],
-            status: data.status === 'not_started' ? 'in_progress' : data.status,
-            solution: data.solution || null,
-          });
-        }
-        await refreshProfile();
-      } catch (err) {
-        console.error('Failed to load today’s round:', err);
-      } finally {
-        setInitializing(false);
-      }
-    })();
-  }, [refreshProfile]);
+    boot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resolveDailyGuess = useCallback(
     async (guess: string): Promise<SubmitResult> => {
@@ -130,7 +141,48 @@ export const GamePage: React.FC = () => {
   }, [mode, dailyRound]);
 
   if (initializing) {
-    return <div className="min-h-screen bg-[#0c0a09]" />;
+    return (
+      <div className="min-h-screen bg-[#0c0a09] flex flex-col items-center justify-center gap-4">
+        <div className="flex items-center gap-1.5">
+          {['W', 'O', 'R', 'D'].map((l, i) => (
+            <span
+              key={i}
+              className={`w-9 h-9 rounded-md flex items-center justify-center font-display font-bold text-sm animate-tile-pop ${
+                i % 2 === 0 ? 'bg-emerald-700 text-white' : 'bg-amber-600 text-stone-950'
+              }`}
+              style={{ animationDelay: `${i * 120}ms`, animationFillMode: 'backwards' }}
+            >
+              {l}
+            </span>
+          ))}
+        </div>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-stone-500">Loading today's puzzle&hellip;</p>
+      </div>
+    );
+  }
+
+  if (authBlocked) {
+    return (
+      <div className="min-h-screen bg-[#0c0a09] text-stone-100 flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="w-14 h-14 rounded-full bg-rose-950/60 border border-rose-800/60 flex items-center justify-center">
+          <WifiOff className="w-6 h-6 text-rose-400" />
+        </div>
+        <h1 className="font-display font-bold text-lg">Wordezy is briefly unavailable</h1>
+        <p className="text-sm text-stone-400 max-w-xs">
+          {authBlocked === 'anonymous_disabled'
+            ? "We're setting up today's game — please check back in a few minutes."
+            : "We couldn't connect to the game right now. Check your connection and try again."}
+        </p>
+        <button
+          type="button"
+          onClick={boot}
+          className="mt-2 inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-stone-800 hover:bg-stone-700 text-sm font-semibold cursor-pointer"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Try again
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -142,9 +194,13 @@ export const GamePage: React.FC = () => {
           <span className="text-amber-400">ezy</span>
         </div>
         <div className="flex items-center gap-2">
-          {mode === 'daily' && dailyRound.status !== 'in_progress' && (
-            <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/50 border border-emerald-800/60 px-2 py-1 rounded">
-              🔥 {profile?.current_streak ?? 0}
+          {mode === 'daily' && (
+            <span
+              className="flex items-center gap-1 text-[11px] font-mono font-semibold text-emerald-400 bg-emerald-950/50 border border-emerald-800/60 px-2 py-1 rounded"
+              title="Current streak"
+            >
+              <Flame className="w-3 h-3" />
+              {profile?.current_streak ?? 0}
             </span>
           )}
           <button
@@ -167,25 +223,32 @@ export const GamePage: React.FC = () => {
       </header>
 
       {/* Mode Tabs */}
-      <div className="flex items-center justify-center gap-2 py-3">
-        <button
-          type="button"
-          onClick={() => setMode('daily')}
-          className={`py-1.5 px-4 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
-            mode === 'daily' ? 'bg-emerald-600 text-white' : 'bg-stone-900 text-stone-400 border border-stone-800'
-          }`}
-        >
-          Daily Challenge
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('practice')}
-          className={`py-1.5 px-4 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
-            mode === 'practice' ? 'bg-amber-500 text-stone-950' : 'bg-stone-900 text-stone-400 border border-stone-800'
-          }`}
-        >
-          Practice
-        </button>
+      <div className="flex justify-center py-3 px-4">
+        <div className="relative flex items-center bg-stone-900 border border-stone-800 rounded-full p-1 w-full max-w-[280px]">
+          <div
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full transition-transform duration-200 ease-out ${
+              mode === 'daily' ? 'translate-x-0 bg-emerald-600' : 'translate-x-[calc(100%+8px)] bg-amber-500'
+            }`}
+          />
+          <button
+            type="button"
+            onClick={() => setMode('daily')}
+            className={`relative z-10 flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
+              mode === 'daily' ? 'text-white' : 'text-stone-400'
+            }`}
+          >
+            Daily
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('practice')}
+            className={`relative z-10 flex-1 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cursor-pointer transition-colors ${
+              mode === 'practice' ? 'text-stone-950' : 'text-stone-400'
+            }`}
+          >
+            Practice
+          </button>
+        </div>
       </div>
 
       {/* Board */}
@@ -199,21 +262,45 @@ export const GamePage: React.FC = () => {
         />
 
         {activeRound.status !== 'in_progress' && (
-          <div className="text-center space-y-2 animate-tile-pop">
+          <div
+            className={`w-full max-w-[320px] sm:max-w-[380px] mx-auto text-center space-y-3 rounded-xl border px-5 py-4 animate-tile-pop ${
+              activeRound.status === 'won'
+                ? 'bg-emerald-950/40 border-emerald-800/60'
+                : 'bg-rose-950/30 border-rose-900/50'
+            }`}
+          >
             <p className={`font-display font-bold text-lg ${activeRound.status === 'won' ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {activeRound.status === 'won' ? 'You got it!' : `The word was ${activeRound.solution?.toUpperCase()}`}
+              {activeRound.status === 'won'
+                ? ['Genius', 'Magnificent', 'Impressive', 'Splendid', 'Great', 'Phew'][activeRound.guesses.length - 1] || 'Solved!'
+                : `The word was ${activeRound.solution?.toUpperCase()}`}
             </p>
-            {mode === 'practice' ? (
-              <button
-                type="button"
-                onClick={startNewPracticeRound}
-                className="py-2 px-5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-sm cursor-pointer"
-              >
-                Play Another
-              </button>
-            ) : (
-              <p className="text-xs text-stone-400">Come back tomorrow for a new word.</p>
+            {activeRound.status === 'won' && (
+              <p className="text-xs text-stone-400">
+                Solved in {activeRound.guesses.length} / {dailyGame.maxGuesses}
+              </p>
             )}
+            <div className="flex items-center justify-center gap-2 pt-1">
+              {mode === 'practice' ? (
+                <button
+                  type="button"
+                  onClick={startNewPracticeRound}
+                  className="py-2 px-5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-sm cursor-pointer transition-colors"
+                >
+                  Play Another
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowStats(true)}
+                    className="py-2 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm cursor-pointer transition-colors"
+                  >
+                    View Stats
+                  </button>
+                  <p className="text-xs text-stone-500">Next word at midnight UTC</p>
+                </>
+              )}
+            </div>
           </div>
         )}
 
@@ -224,7 +311,7 @@ export const GamePage: React.FC = () => {
         />
       </main>
 
-      <Toast message={active.toast} />
+      <Toast message={active.toast} variant={active.toastVariant} />
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       {showStats && (
         <StatsModal

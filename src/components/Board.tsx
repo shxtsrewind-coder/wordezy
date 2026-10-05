@@ -19,15 +19,14 @@ interface BoardProps {
 export const Board: React.FC<BoardProps> = ({ guesses, feedback, currentGuess, shakeRow, justSubmittedRow }) => {
   const rows = Array.from({ length: MAX_GUESSES }, (_, rowIdx) => {
     const isActiveRow = rowIdx === guesses.length;
+    const isRevealing = rowIdx === justSubmittedRow;
     const word = isActiveRow ? currentGuess : guesses[rowIdx] || '';
     const rowFeedback = feedback[rowIdx];
 
     return (
       <div
         key={rowIdx}
-        className={`grid grid-cols-5 gap-1.5 ${shakeRow === rowIdx ? 'animate-shake' : ''} ${
-          justSubmittedRow === rowIdx ? 'animate-row-bounce' : ''
-        }`}
+        className={`grid grid-cols-5 gap-1.5 sm:gap-2 ${shakeRow === rowIdx ? 'animate-shake' : ''}`}
       >
         {Array.from({ length: WORD_LENGTH }, (_, colIdx) => {
           const letter = word[colIdx] || '';
@@ -36,14 +35,18 @@ export const Board: React.FC<BoardProps> = ({ guesses, feedback, currentGuess, s
           const colorClasses = status
             ? TILE_COLORS[status]
             : hasLetter
-            ? 'bg-transparent border-stone-500 text-stone-100'
+            ? 'bg-transparent border-stone-400 text-stone-100 scale-[1.04]'
+            : isActiveRow
+            ? 'bg-transparent border-stone-700 text-stone-100'
             : 'bg-transparent border-stone-800 text-stone-100';
 
           return (
             <div
               key={colIdx}
-              className={`relative w-full aspect-square rounded-md border-2 flex items-center justify-center font-display font-bold text-2xl sm:text-3xl uppercase select-none ${colorClasses}`}
-              style={status ? { animationDelay: `${colIdx * 80}ms` } : undefined}
+              className={`relative w-full aspect-square rounded-md border-2 flex items-center justify-center font-display font-bold text-2xl sm:text-3xl uppercase select-none transition-[transform,background-color,border-color] duration-150 ${colorClasses} ${
+                isRevealing && status ? 'animate-tile-flip' : ''
+              } ${hasLetter && !status ? 'animate-tile-pop' : ''}`}
+              style={isRevealing && status ? { animationDelay: `${colIdx * 220}ms`, animationFillMode: 'backwards' } : undefined}
             >
               {letter}
             </div>
@@ -53,5 +56,5 @@ export const Board: React.FC<BoardProps> = ({ guesses, feedback, currentGuess, s
     );
   });
 
-  return <div className="flex flex-col gap-1.5 w-full max-w-[340px] mx-auto">{rows}</div>;
+  return <div className="flex flex-col gap-1.5 sm:gap-2 w-full max-w-[320px] sm:max-w-[380px] mx-auto">{rows}</div>;
 };

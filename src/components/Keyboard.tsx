@@ -18,9 +18,9 @@ interface KeyboardProps {
 
 export const Keyboard: React.FC<KeyboardProps> = ({ keyStatuses, onKeyPress, disabled }) => {
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col gap-1.5 select-none">
+    <div className="w-full max-w-md mx-auto flex flex-col gap-1.5 sm:gap-2 select-none">
       {KEYBOARD_ROWS.map((row, i) => (
-        <div key={i} className="flex justify-center gap-1.5">
+        <div key={i} className="flex justify-center gap-1.5 sm:gap-2">
           {row.map((key) => {
             const isWide = key === 'ENTER' || key === 'BACKSPACE';
             const status = keyStatuses[key] || 'unused';
@@ -30,7 +30,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyStatuses, onKeyPress, dis
                 type="button"
                 disabled={disabled}
                 onClick={() => onKeyPress(key)}
-                className={`${isWide ? 'flex-[1.6] text-[10px]' : 'flex-1 text-xs sm:text-sm'} h-12 sm:h-14 rounded-md font-bold uppercase flex items-center justify-center transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${KEY_COLORS[status]}`}
+                className={`${isWide ? 'flex-[1.6] text-[10px]' : 'flex-1 text-xs sm:text-sm'} h-12 sm:h-14 rounded-md font-bold uppercase flex items-center justify-center transition-all duration-100 cursor-pointer active:scale-90 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm ${KEY_COLORS[status]}`}
               >
                 {key === 'BACKSPACE' ? (
                   <Delete className="w-4 h-4" />

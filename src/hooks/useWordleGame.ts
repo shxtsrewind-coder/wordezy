@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { GUESS_DICTIONARY } from '../data/dictionary.ts';
 import { MAX_GUESSES, WORD_LENGTH, buildKeyStatuses } from '../lib/wordle.ts';
 import type { LetterStatus } from '../lib/wordle.ts';
+import type { ToastVariant } from '../components/Toast.tsx';
 
 export type GameStatus = 'in_progress' | 'won' | 'lost';
 
@@ -35,12 +36,14 @@ export function useWordleGame(
 ) {
   const [currentGuess, setCurrentGuess] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>('neutral');
   const [shakeRow, setShakeRow] = useState<number | null>(null);
   const [justSubmittedRow, setJustSubmittedRow] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const showToast = useCallback((msg: string, durationMs = 1600) => {
+  const showToast = useCallback((msg: string, durationMs = 1600, variant: ToastVariant = 'neutral') => {
     setToast(msg);
+    setToastVariant(variant);
     setTimeout(() => setToast((t) => (t === msg ? null : t)), durationMs);
   }, []);
 
@@ -91,7 +94,7 @@ export function useWordleGame(
             showToast(result.solution.toUpperCase(), 3200);
           }
         } catch (err: any) {
-          showToast(err?.message || 'Something went wrong. Try again.');
+          showToast(err?.message || 'Something went wrong. Try again.', 2400, 'error');
         } finally {
           setSubmitting(false);
         }
@@ -112,6 +115,7 @@ export function useWordleGame(
     currentGuess,
     setCurrentGuess,
     toast,
+    toastVariant,
     shakeRow,
     justSubmittedRow,
     submitting,
