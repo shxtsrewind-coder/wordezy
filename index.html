@@ -108,18 +108,18 @@
       #initial-loader .wl-loader-mark {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
         font-family: 'Cinzel', Georgia, serif;
         font-weight: 600;
-        font-size: 26px;
-        letter-spacing: 0.04em;
+        font-size: 18px;
+        letter-spacing: 0.02em;
       }
       #initial-loader .wl-loader-mark .tile {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         border-radius: 5px;
         color: #0b0a08;
       }
@@ -127,6 +127,9 @@
       #initial-loader .wl-loader-mark .tile:nth-child(2) { background: #c9922f; }
       #initial-loader .wl-loader-mark .tile:nth-child(3) { background: #342f26; color: #978c79; }
       #initial-loader .wl-loader-mark .tile:nth-child(4) { background: #2f9e6e; }
+      #initial-loader .wl-loader-mark .tile:nth-child(5) { background: #c9922f; }
+      #initial-loader .wl-loader-mark .tile:nth-child(6) { background: #342f26; color: #978c79; }
+      #initial-loader .wl-loader-mark .tile:nth-child(7) { background: #2f9e6e; }
       #initial-loader .wl-loader-spinner {
         width: 26px;
         height: 26px;
@@ -153,13 +156,16 @@
       }
     </style>
   </head>
-  <body class="bg-[#0c0a09] text-stone-100 antialiased selection:bg-emerald-900/60 selection:text-emerald-200">
+  <body class="bg-[#0b0a08] text-paper antialiased selection:bg-correct-soft selection:text-correct">
     <div id="initial-loader" aria-live="polite" aria-label="Loading Wordezy">
       <div class="wl-loader-mark">
         <span class="tile">W</span>
         <span class="tile">O</span>
         <span class="tile">R</span>
         <span class="tile">D</span>
+        <span class="tile">E</span>
+        <span class="tile">Z</span>
+        <span class="tile">Y</span>
       </div>
       <div class="wl-loader-spinner" role="status"></div>
       <div class="wl-loader-caption">Shuffling the letters&hellip;</div>

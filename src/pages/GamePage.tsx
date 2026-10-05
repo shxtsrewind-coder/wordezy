@@ -28,27 +28,38 @@ function randomAnswer(): string {
 type Phase = 'auth_checking' | 'auth_blocked' | 'choice' | 'loading_data' | 'onboarding_help' | 'ready';
 type PracticeStatus = 'unknown' | 'checking' | 'allowed' | 'locked' | 'error';
 
-/** The four-tile mark used as both the boot loader and the header wordmark,
- * so the brand is the game's own tiles rather than a bolted-on logotype. */
-const WordmarkTiles: React.FC<{ size?: 'sm' | 'lg'; animate?: boolean }> = ({ size = 'sm', animate = false }) => {
-  const dims = size === 'lg' ? 'w-9 h-9 text-sm rounded-[6px]' : 'w-6 h-6 text-[11px] rounded-[4px]';
-  const letters = [
-    { l: 'W', cls: 'bg-correct text-paper' },
-    { l: 'O', cls: 'bg-present text-ink' },
-    { l: 'R', cls: 'bg-absent text-faint' },
-    { l: 'D', cls: 'bg-correct text-paper' },
-  ];
+const TILE_MARK_CLASSES = {
+  correct: 'bg-correct text-paper',
+  present: 'bg-present text-ink',
+  absent: 'bg-absent text-faint',
+} as const;
+
+/** The tile mark used as both the boot loader and the header wordmark, so the
+ * brand is the game's own tiles rather than a bolted-on logotype. Defaults to
+ * the compact "WORD" mark for the header; the loader spells the full name. */
+const WordmarkTiles: React.FC<{ word?: string; size?: 'sm' | 'lg'; animate?: boolean }> = ({
+  word = 'WORD',
+  size = 'sm',
+  animate = false,
+}) => {
+  const dims = size === 'lg' ? 'w-8 h-8 text-sm rounded-[5px]' : 'w-6 h-6 text-[11px] rounded-[4px]';
+  const pattern: Array<keyof typeof TILE_MARK_CLASSES> = ['correct', 'present', 'correct', 'absent'];
   return (
     <div className="flex items-center gap-1">
-      {letters.map((t, i) => (
-        <span
-          key={i}
-          className={`${dims} ${t.cls} flex items-center justify-center font-display font-semibold ${animate ? 'animate-tile-pop' : ''}`}
-          style={animate ? { animationDelay: `${i * 120}ms`, animationFillMode: 'backwards' } : undefined}
-        >
-          {t.l}
-        </span>
-      ))}
+      {word.split('').map((letter, i) => {
+        const status = pattern[i % pattern.length];
+        return (
+          <span
+            key={i}
+            className={`${dims} ${TILE_MARK_CLASSES[status]} flex items-center justify-center font-display font-semibold ${
+              animate ? 'animate-tile-pop' : ''
+            }`}
+            style={animate ? { animationDelay: `${i * 90}ms`, animationFillMode: 'backwards' } : undefined}
+          >
+            {letter}
+          </span>
+        );
+      })}
     </div>
   );
 };
@@ -251,7 +262,7 @@ export const GamePage: React.FC = () => {
   if (phase === 'auth_checking' || phase === 'loading_data') {
     return (
       <div className="min-h-screen bg-ink flex flex-col items-center justify-center gap-4">
-        <WordmarkTiles size="lg" animate />
+        <WordmarkTiles word="WORDEZY" size="lg" animate />
         <p className="font-mono text-[11px] tracking-wide text-muted">
           {phase === 'auth_checking' ? 'Signing you in…' : "Loading today's puzzle…"}
         </p>
