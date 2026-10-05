@@ -34,9 +34,16 @@ const TILE_MARK_CLASSES = {
   absent: 'bg-absent text-faint',
 } as const;
 
+/** How long the brand loader lingers on screen, start to finish. A real network
+ * round trip is often fast enough that the tiles would pop and vanish before
+ * anyone reads them, so the boot sequence below pads out to this floor rather
+ * than racing ahead. Kept in step with the cascade timing below. */
+const MIN_LOADER_MS = 1800;
+
 /** The tile mark used as both the boot loader and the header wordmark, so the
  * brand is the game's own tiles rather than a bolted-on logotype. Defaults to
- * the compact "WORD" mark for the header; the loader spells the full name. */
+ * the compact "WORD" mark for the header; the loader spells the full name,
+ * letter by letter, at an unhurried pace. */
 const WordmarkTiles: React.FC<{ word?: string; size?: 'sm' | 'lg'; animate?: boolean }> = ({
   word = 'WORD',
   size = 'sm',
@@ -54,7 +61,11 @@ const WordmarkTiles: React.FC<{ word?: string; size?: 'sm' | 'lg'; animate?: boo
             className={`${dims} ${TILE_MARK_CLASSES[status]} flex items-center justify-center font-display font-semibold ${
               animate ? 'animate-tile-pop' : ''
             }`}
-            style={animate ? { animationDelay: `${i * 90}ms`, animationFillMode: 'backwards' } : undefined}
+            style={
+              animate
+                ? { animationDelay: `${i * 170}ms`, animationDuration: '260ms', animationFillMode: 'backwards' }
+                : undefined
+            }
           >
             {letter}
           </span>
@@ -82,6 +93,15 @@ export const GamePage: React.FC = () => {
   const [showStats, setShowStats] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const challengeDate = useRef(todayUtc());
+  const bootStartedAt = useRef(Date.now());
+
+  /** Pads out whatever's left of MIN_LOADER_MS so the brand loader never
+   * flashes off before the tile cascade has had a chance to play. A slow
+   * connection is unaffected — this only ever adds a wait on the fast path. */
+  const waitForMinLoader = useCallback(async () => {
+    const remaining = MIN_LOADER_MS - (Date.now() - bootStartedAt.current);
+    if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     const { data } = await supabase
@@ -107,13 +127,14 @@ export const GamePage: React.FC = () => {
       }
       await refreshProfile();
       const seenHelp = typeof window !== 'undefined' && localStorage.getItem(SEEN_HELP_KEY) === 'true';
+      await waitForMinLoader();
       setPhase(seenHelp ? 'ready' : 'onboarding_help');
     } catch (err) {
       console.error('Failed to load today’s round:', err);
       setAuthBlockedReason('unknown');
       setPhase('auth_blocked');
     }
-  }, [refreshProfile]);
+  }, [refreshProfile, waitForMinLoader]);
 
   const bootAuth = useCallback(async () => {
     setPhase('auth_checking');
@@ -140,6 +161,7 @@ export const GamePage: React.FC = () => {
       if (!anon || choiceDone) {
         await loadGameData();
       } else {
+        await waitForMinLoader();
         setPhase('choice');
       }
     } catch (err) {
@@ -147,7 +169,7 @@ export const GamePage: React.FC = () => {
       setAuthBlockedReason('unknown');
       setPhase('auth_blocked');
     }
-  }, [loadGameData]);
+  }, [loadGameData, waitForMinLoader]);
 
   useEffect(() => {
     bootAuth();
@@ -261,8 +283,9 @@ export const GamePage: React.FC = () => {
 
   if (phase === 'auth_checking' || phase === 'loading_data') {
     return (
-      <div className="min-h-screen bg-ink flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-ink flex flex-col items-center justify-center gap-5">
         <WordmarkTiles word="WORDEZY" size="lg" animate />
+        <div className="w-5 h-5 border-2 border-rule border-t-correct rounded-full animate-spin" />
         <p className="font-mono text-[11px] tracking-wide text-muted">
           {phase === 'auth_checking' ? 'Signing you in…' : "Loading today's puzzle…"}
         </p>
