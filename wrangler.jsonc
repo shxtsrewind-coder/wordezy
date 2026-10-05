@@ -5,7 +5,7 @@
   //
   // Build step (run by Cloudflare before deploy): `npm run build` → dist/
   // Deploy step: `npx wrangler deploy`
-  "name": "wordlock",
+  "name": "wordezy",
   "compatibility_date": "2026-01-01",
   "assets": {
     "directory": "./dist",

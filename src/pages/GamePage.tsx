@@ -122,10 +122,10 @@ export const GamePage: React.FC = () => {
   const shareText = useMemo(() => {
     if (mode !== 'daily' || dailyRound.status === 'in_progress') return null;
     return buildShareText({
-      title: `WordLock ${challengeDate.current}`,
+      title: `Wordezy ${challengeDate.current}`,
       feedback: dailyRound.feedback,
       attempt: dailyRound.status === 'won' ? dailyRound.guesses.length : null,
-      url: 'https://wordlock.bgameworld.com',
+      url: 'https://wordezy.bgameworld.com',
     });
   }, [mode, dailyRound]);
 
@@ -139,7 +139,7 @@ export const GamePage: React.FC = () => {
       <header className="border-b border-stone-800 px-4 py-3 flex items-center justify-between max-w-xl w-full mx-auto">
         <div className="flex items-center gap-1.5 font-display font-bold text-lg tracking-wide">
           <span className="text-emerald-500">Word</span>
-          <span className="text-amber-400">Lock</span>
+          <span className="text-amber-400">ezy</span>
         </div>
         <div className="flex items-center gap-2">
           {mode === 'daily' && dailyRound.status !== 'in_progress' && (
