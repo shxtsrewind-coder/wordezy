@@ -14,6 +14,7 @@ import type { ProfileStats } from '../components/StatsModal.tsx';
 import { AuthModal } from '../components/AuthModal.tsx';
 import { LeaderboardModal } from '../components/LeaderboardModal.tsx';
 import { ACHIEVEMENTS, computeAchievements } from '../lib/achievements.ts';
+import { reportChallengeScore } from '../lib/challenge.ts';
 
 const PLAY_CHOICE_KEY = 'wordezy_play_choice_completed';
 const SEEN_HELP_KEY = 'wordezy_seen_how_to_play';
@@ -228,6 +229,10 @@ export const GamePage: React.FC = () => {
       if (error) throw new Error(await parseSupabaseError(error));
       if (data.status !== 'in_progress') {
         refreshProfile();
+        // bgameworld.com daily challenge, when this visit came from a signed-in
+        // challenge link: fewer guesses scores higher, a loss scores zero.
+        const guessCount = dailyRound.guesses.length + 1;
+        reportChallengeScore(data.status === 'won' ? (7 - guessCount) * 10 : 0);
       }
       return {
         feedback: data.feedback,
@@ -237,7 +242,7 @@ export const GamePage: React.FC = () => {
         isNewBest: data.is_new_best ?? false,
       };
     },
-    [refreshProfile]
+    [refreshProfile, dailyRound.guesses.length]
   );
 
   const resolvePracticeGuess = useCallback(
