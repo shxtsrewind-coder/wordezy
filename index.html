@@ -2,6 +2,29 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+
+    <!--
+      bgameworld.com's daily-challenge pop-up links here as
+      /#ch=<date>|wordezy|<access token> for a signed-in player. react-router's
+      HashRouter below treats the whole URL hash as its route, so that
+      fragment has to be read and cleared here — before any module script,
+      before React, before the router ever gets a look at it — or it'd be
+      parsed as an unknown route and the game would fail to load.
+    -->
+    <script>
+      (function () {
+        if (location.hash.indexOf('#ch=') === 0) {
+          try {
+            var raw = decodeURIComponent(location.hash.slice(4));
+            var parts = raw.split('|');
+            if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+              window.__bgwChallenge = { date: parts[0], game: parts[1], token: parts[2] };
+            }
+          } catch (e) {}
+          history.replaceState(null, '', location.pathname + location.search);
+        }
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <!-- Primary SEO -->

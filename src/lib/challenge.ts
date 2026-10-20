@@ -6,25 +6,15 @@ interface ChallengeTicket {
   token: string;
 }
 
-let ticket: ChallengeTicket | null = null;
-
-// The bgameworld.com portal's daily-challenge popup links here as
-// https://wordezy.bgameworld.com/#ch=<date>|<game>|<access token> for a
-// signed-in player. The fragment never reaches any server on its own (no
-// Referer header, no access log), so this is the only place it's read. We
-// pull it into memory once and strip it from the address bar immediately —
-// it shouldn't linger visibly, and a refresh/share of the page shouldn't
-// resubmit it.
-if (typeof window !== 'undefined' && window.location.hash.startsWith('#ch=')) {
-  try {
-    const raw = decodeURIComponent(window.location.hash.slice(4));
-    const [date, game, token] = raw.split('|');
-    if (date && game && token) ticket = { date, game, token };
-  } catch {
-    // malformed fragment; ignore and carry on as an ordinary visit
+declare global {
+  interface Window {
+    /** Set by the inline script in index.html, before any module loads —
+     *  see that file for why the hash has to be read and cleared that early. */
+    __bgwChallenge?: ChallengeTicket;
   }
-  window.history.replaceState(null, '', window.location.pathname + window.location.search);
 }
+
+const ticket: ChallengeTicket | null = (typeof window !== 'undefined' && window.__bgwChallenge) || null;
 
 /**
  * Reports this round's score to the bgameworld.com daily-challenge
