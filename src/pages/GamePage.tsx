@@ -15,6 +15,7 @@ import { AuthModal } from '../components/AuthModal.tsx';
 import { LeaderboardModal } from '../components/LeaderboardModal.tsx';
 import { ACHIEVEMENTS, computeAchievements } from '../lib/achievements.ts';
 import { reportChallengeScore } from '../lib/challenge.ts';
+import { REWARDED_ADS_ENABLED, showRewardedAd } from '../lib/rewardedAd.ts';
 
 const PLAY_CHOICE_KEY = 'wordezy_play_choice_completed';
 const SEEN_HELP_KEY = 'wordezy_seen_how_to_play';
@@ -89,6 +90,11 @@ export const GamePage: React.FC = () => {
   const [practiceRound, setPracticeRound] = useState<RoundState>(emptyRoundState());
   const [practiceWord, setPracticeWord] = useState<string | null>(null);
   const [practiceStatus, setPracticeStatus] = useState<PracticeStatus>('unknown');
+  // One bonus practice round per day, unlocked by watching a rewarded ad once
+  // today's free round is used up. Client-only — doesn't touch the server's
+  // once-a-day practice claim, so it can't affect any stat or leaderboard.
+  const [bonusPracticeUsed, setBonusPracticeUsed] = useState(false);
+  const [adState, setAdState] = useState<'idle' | 'loading' | 'error'>('idle');
 
   const [profile, setProfile] = useState<ProfileStats | null>(null);
   const [showHelp, setShowHelp] = useState(false);
@@ -211,6 +217,24 @@ export const GamePage: React.FC = () => {
       setPracticeStatus('error');
     }
   }, []);
+
+  const watchAdForBonusPractice = useCallback(() => {
+    if (!userId || adState === 'loading') return;
+    setAdState('loading');
+    showRewardedAd(userId, {
+      onReward: () => {
+        setAdState('idle');
+        setBonusPracticeUsed(true);
+        setPracticeWord(randomAnswer());
+        setPracticeRound(emptyRoundState());
+        setPracticeStatus('allowed');
+      },
+      onFailure: (reason) => {
+        console.warn('Rewarded ad not completed:', reason);
+        setAdState('error');
+      },
+    });
+  }, [userId, adState]);
 
   // Practice is limited to one round/day, enforced server-side; claim it the
   // first time the player switches into the tab each session.
@@ -446,13 +470,28 @@ export const GamePage: React.FC = () => {
                   <>
                     <p className="text-sm text-paper">You've used today's practice round.</p>
                     <p className="text-xs text-muted">Ready for the real thing?</p>
-                    <button
-                      type="button"
-                      onClick={() => setMode('daily')}
-                      className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
-                    >
-                      Play Daily Challenge
-                    </button>
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setMode('daily')}
+                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
+                      >
+                        Play Daily Challenge
+                      </button>
+                      {REWARDED_ADS_ENABLED && !bonusPracticeUsed && (
+                        <button
+                          type="button"
+                          onClick={watchAdForBonusPractice}
+                          disabled={adState === 'loading'}
+                          className="py-2 px-5 rounded-md bg-surface-high hover:bg-rule border border-rule text-paper font-medium text-sm cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-default"
+                        >
+                          {adState === 'loading' ? 'Loading ad…' : 'Watch an ad for one more round'}
+                        </button>
+                      )}
+                      {adState === 'error' && (
+                        <p className="text-xs text-danger">That ad didn't finish, so no bonus round yet — try again.</p>
+                      )}
+                    </div>
                   </>
                 )}
               </>
