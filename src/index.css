@@ -1,30 +1,30 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Libre Franklin', 'Helvetica Neue', Arial, ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-  --font-display: 'Cinzel', Georgia, serif;
+  --font-display: 'Zilla Slab', Rockwell, Georgia, serif;
 
-  /* Letterpress palette — derived from the tile feedback colors themselves
-     (correct/present/absent) rather than an arbitrary accent pair, warmed
-     toward ink-and-paper instead of cool SaaS gray. */
-  --color-ink: #0b0a08;
-  --color-surface: #161310;
-  --color-surface-high: #201b15;
-  --color-rule: #2a241c;
-  --color-paper: #f2ece0;
-  --color-muted: #978c79;
-  --color-faint: #5c5648;
+  /* Light, flat palette shared with bgameworld.com: white page, ink text,
+     grey keys, and flat tile colours that carry white letters. The token
+     names predate the light theme: "ink" is the page, "paper" the text. */
+  --color-ink: #ffffff;
+  --color-surface: #f6f6f3;
+  --color-surface-high: #e2e3e0;
+  --color-rule: #d3d6da;
+  --color-paper: #121212;
+  --color-muted: #5c5c5c;
+  --color-faint: #8b8b86;
 
-  --color-correct: #2f9e6e;
-  --color-correct-dim: #1f6e4c;
-  --color-correct-soft: #16352a;
-  --color-present: #c9922f;
-  --color-present-dim: #8f6522;
-  --color-present-soft: #332a16;
-  --color-absent: #342f26;
-  --color-danger: #c2492f;
-  --color-danger-soft: #2e1710;
+  --color-correct: #3a8b55;
+  --color-correct-dim: #2e7045;
+  --color-correct-soft: #e3f0e7;
+  --color-present: #b5841e;
+  --color-present-dim: #946b16;
+  --color-present-soft: #f6ecd6;
+  --color-absent: #787c7e;
+  --color-danger: #c23b2e;
+  --color-danger-soft: #f9e3e0;
 }
 
 html,
@@ -37,10 +37,10 @@ body {
 html[data-contrast='high'] {
   --color-correct: #d9622b;
   --color-correct-dim: #a3461c;
-  --color-correct-soft: #3a1d10;
-  --color-present: #85c0f9;
-  --color-present-dim: #4f8fcf;
-  --color-present-soft: #15283b;
+  --color-correct-soft: #fbe6dc;
+  --color-present: #3d84d6;
+  --color-present-dim: #2c66aa;
+  --color-present-soft: #e1edfa;
 }
 
 body {

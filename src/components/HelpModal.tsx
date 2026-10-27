@@ -3,8 +3,8 @@ import { X } from 'lucide-react';
 
 export const HelpModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-4 shadow-xl shadow-black/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-4 shadow-xl shadow-black/15">
         <div className="flex items-center justify-between pb-2 border-b border-rule">
           <h2 className="font-display font-semibold text-paper">How to play</h2>
           <button type="button" onClick={onClose} className="text-muted hover:text-paper cursor-pointer">
@@ -17,7 +17,7 @@ export const HelpModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </p>
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[6px] bg-correct flex items-center justify-center font-display font-semibold text-paper">
+            <div className="w-9 h-9 rounded-[6px] bg-correct flex items-center justify-center font-display font-semibold text-white">
               W
             </div>
             <span className="text-paper/80">The letter is in the word, in the right spot.</span>

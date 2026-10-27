@@ -57,8 +57,8 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({ userId, onCl
   const myRank = currentRows ? currentRows.findIndex((r) => r.user_id === userId) : -1;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-4 shadow-xl shadow-black/40 max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-4 shadow-xl shadow-black/15 max-h-[85vh] flex flex-col">
         <div className="flex items-center justify-between pb-2 border-b border-rule">
           <h2 className="font-display font-semibold text-paper flex items-center gap-2">
             <Trophy className="w-4 h-4 text-present" />

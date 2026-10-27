@@ -4,9 +4,9 @@ import { KEYBOARD_ROWS } from '../lib/wordle.ts';
 import type { KeyStatus } from '../lib/wordle.ts';
 
 const KEY_COLORS: Record<KeyStatus, string> = {
-  correct: 'bg-correct text-paper',
+  correct: 'bg-correct text-white',
   present: 'bg-present text-ink',
-  absent: 'bg-absent text-faint',
+  absent: 'bg-absent text-white',
   unused: 'bg-surface-high text-paper hover:bg-rule',
 };
 

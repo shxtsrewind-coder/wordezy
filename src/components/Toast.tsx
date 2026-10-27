@@ -4,7 +4,7 @@ export type ToastVariant = 'neutral' | 'error';
 
 const VARIANT_CLASSES: Record<ToastVariant, string> = {
   neutral: 'bg-paper text-ink',
-  error: 'bg-danger text-paper',
+  error: 'bg-danger text-white',
 };
 
 export const Toast: React.FC<{ message: string | null; variant?: ToastVariant }> = ({

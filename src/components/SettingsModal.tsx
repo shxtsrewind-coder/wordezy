@@ -43,7 +43,7 @@ const Toggle: React.FC<{
       }`}
     >
       <span
-        className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-paper transition-transform ${
+        className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-transform ${
           checked ? 'translate-x-5' : ''
         }`}
       />
@@ -64,14 +64,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onChange
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-title"
-        className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 shadow-xl shadow-black/40"
+        className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 shadow-xl shadow-black/15"
       >
         <div className="flex items-center justify-between pb-2 border-b border-rule">
           <h2 id="settings-title" className="font-display font-semibold text-paper">

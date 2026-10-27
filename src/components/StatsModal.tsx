@@ -64,8 +64,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, achievements = []
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-5 shadow-xl shadow-black/40 max-h-[85vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/75 backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-surface border border-rule rounded-lg p-5 space-y-5 shadow-xl shadow-black/15 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-2 border-b border-rule">
           <h2 className="font-display font-semibold text-paper">Statistics</h2>
           <button type="button" onClick={onClose} className="text-muted hover:text-paper cursor-pointer">
@@ -110,7 +110,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, achievements = []
                   <span className="w-3 text-muted font-mono">{i + 1}</span>
                   <div className="flex-1 h-5 bg-absent rounded-[4px] overflow-hidden">
                     <div
-                      className="h-full bg-correct flex items-center justify-end px-1.5 text-[11px] font-mono text-paper min-w-[22px]"
+                      className="h-full bg-correct flex items-center justify-end px-1.5 text-[11px] font-mono text-white min-w-[22px]"
                       style={{ width: `${Math.max(8, (count / maxDist) * 100)}%` }}
                     >
                       {count}
@@ -160,7 +160,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ stats, achievements = []
               <button
                 type="button"
                 onClick={handleShare}
-                className="py-2 px-4 rounded-md bg-correct hover:bg-correct-dim text-paper text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+                className="py-2 px-4 rounded-md bg-correct hover:bg-correct-dim text-white text-sm font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
               >
                 <Share2 className="w-4 h-4" />
                 {copied ? 'Copied' : 'Share'}

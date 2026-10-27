@@ -34,7 +34,7 @@ type Phase = 'auth_checking' | 'auth_blocked' | 'choice' | 'loading_data' | 'onb
 type PracticeStatus = 'unknown' | 'checking' | 'allowed' | 'locked' | 'error';
 
 const TILE_MARK_CLASSES = {
-  correct: 'bg-correct text-paper',
+  correct: 'bg-correct text-white',
   present: 'bg-present text-ink',
   absent: 'bg-absent text-faint',
 } as const;
@@ -491,7 +491,7 @@ export const GamePage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setMode('daily')}
-                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
+                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-white font-medium text-sm cursor-pointer transition-colors"
                       >
                         Play Daily Challenge
                       </button>
@@ -558,7 +558,7 @@ export const GamePage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setMode('daily')}
-                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
+                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-white font-medium text-sm cursor-pointer transition-colors"
                       >
                         Play Daily
                       </button>
@@ -568,7 +568,7 @@ export const GamePage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => (activeRound.status === 'won' ? setShowLeaderboard(true) : setShowStats(true))}
-                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-paper font-medium text-sm cursor-pointer transition-colors"
+                        className="py-2 px-5 rounded-md bg-correct hover:bg-correct-dim text-white font-medium text-sm cursor-pointer transition-colors"
                       >
                         {activeRound.status === 'won' ? 'View leaderboard' : 'View stats'}
                       </button>
