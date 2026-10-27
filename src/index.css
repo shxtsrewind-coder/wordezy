@@ -32,6 +32,17 @@ body {
   background-color: var(--color-ink);
 }
 
+/* High contrast (Settings): orange = right spot, blue = in the word. Swapping
+   the tokens recolours tiles, keys, badges and the help examples together. */
+html[data-contrast='high'] {
+  --color-correct: #d9622b;
+  --color-correct-dim: #a3461c;
+  --color-correct-soft: #3a1d10;
+  --color-present: #85c0f9;
+  --color-present-dim: #4f8fcf;
+  --color-present-soft: #15283b;
+}
+
 body {
   background-image:
     radial-gradient(ellipse 900px 500px at 50% -10%, rgba(47, 158, 110, 0.07), transparent 60%),

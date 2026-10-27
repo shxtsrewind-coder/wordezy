@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { HelpCircle, BarChart3, Flame, WifiOff, RefreshCw, Trophy, Lock } from 'lucide-react';
+import { HelpCircle, BarChart3, Settings as SettingsIcon, Flame, WifiOff, RefreshCw, Trophy, Lock } from 'lucide-react';
 import { supabase, ensureSession, parseSupabaseError } from '../lib/supabase.ts';
 import { ANSWER_WORDS } from '../data/answers.ts';
-import { computeFeedback, buildShareText, formatDuration } from '../lib/wordle.ts';
+import { computeFeedback, buildShareText, formatDuration, puzzleNumber } from '../lib/wordle.ts';
+import { useSettings } from '../lib/settings.ts';
 import type { RoundState, SubmitResult } from '../hooks/useWordleGame.ts';
 import { emptyRoundState, useWordleGame } from '../hooks/useWordleGame.ts';
 import { Board } from '../components/Board.tsx';
 import { Keyboard } from '../components/Keyboard.tsx';
 import { Toast } from '../components/Toast.tsx';
 import { HelpModal } from '../components/HelpModal.tsx';
+import { SettingsModal } from '../components/SettingsModal.tsx';
 import { StatsModal } from '../components/StatsModal.tsx';
 import type { ProfileStats } from '../components/StatsModal.tsx';
 import { AuthModal } from '../components/AuthModal.tsx';
@@ -98,6 +100,8 @@ export const GamePage: React.FC = () => {
 
   const [profile, setProfile] = useState<ProfileStats | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const { settings, update: updateSettings } = useSettings();
   const [showStats, setShowStats] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const challengeDate = useRef(todayUtc());
@@ -281,8 +285,8 @@ export const GamePage: React.FC = () => {
     [practiceWord, practiceRound.guesses.length]
   );
 
-  const dailyGame = useWordleGame(dailyRound, setDailyRound, resolveDailyGuess);
-  const practiceGame = useWordleGame(practiceRound, setPracticeRound, resolvePracticeGuess);
+  const dailyGame = useWordleGame(dailyRound, setDailyRound, resolveDailyGuess, settings.hardMode);
+  const practiceGame = useWordleGame(practiceRound, setPracticeRound, resolvePracticeGuess, settings.hardMode);
 
   const active = mode === 'daily' ? dailyGame : practiceGame;
   const activeRound = mode === 'daily' ? dailyRound : practiceRound;
@@ -290,7 +294,7 @@ export const GamePage: React.FC = () => {
 
   // Physical keyboard support
   useEffect(() => {
-    if (phase !== 'ready' || showHelp || showStats || showLeaderboard || practiceLocked) return;
+    if (phase !== 'ready' || showHelp || showStats || showLeaderboard || showSettings || practiceLocked || settings.onscreenOnly) return;
     const handler = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const key = e.key.toUpperCase();
@@ -301,7 +305,7 @@ export const GamePage: React.FC = () => {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [active, phase, showHelp, showStats, showLeaderboard, practiceLocked]);
+  }, [active, phase, showHelp, showStats, showLeaderboard, showSettings, practiceLocked, settings.onscreenOnly]);
 
   const achievements = useMemo(() => (profile ? computeAchievements(profile) : []), [profile]);
   const earnedCount = achievements.filter((a) => a.earned).length;
@@ -309,12 +313,14 @@ export const GamePage: React.FC = () => {
   const shareText = useMemo(() => {
     if (mode !== 'daily' || dailyRound.status === 'in_progress') return null;
     return buildShareText({
-      title: `Wordezy ${challengeDate.current}`,
+      title: `Wordezy No. ${puzzleNumber(challengeDate.current)}`,
       feedback: dailyRound.feedback,
       attempt: dailyRound.status === 'won' ? dailyRound.guesses.length : null,
       url: 'https://wordezy.bgameworld.com',
+      highContrast: settings.highContrast,
+      hardMode: settings.hardMode,
     });
-  }, [mode, dailyRound]);
+  }, [mode, dailyRound, settings.highContrast, settings.hardMode]);
 
   if (phase === 'auth_checking' || phase === 'loading_data') {
     return (
@@ -359,12 +365,12 @@ export const GamePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-ink text-paper flex flex-col">
       {/* Header */}
-      <header className="border-b border-rule px-4 py-3 flex items-center justify-between max-w-[420px] w-full mx-auto">
-        <div className="flex items-center gap-2.5">
+      <header className="border-b border-rule px-3 py-3 flex items-center justify-between max-w-[420px] w-full mx-auto">
+        <div className="flex items-center gap-2">
           <WordmarkTiles />
-          <span className="font-display font-semibold text-base tracking-wide text-paper">Wordezy</span>
+          <span className="sr-only min-[400px]:not-sr-only font-display font-semibold text-base tracking-wide text-paper">Wordezy</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {mode === 'daily' && (
             <span
               className="flex items-center gap-1 text-[11px] font-mono font-medium text-correct bg-correct-soft border border-correct-dim/50 px-2 py-1 rounded"
@@ -378,7 +384,7 @@ export const GamePage: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowStats(true)}
-              className="flex items-center gap-1 text-[11px] font-mono font-medium text-present bg-present-soft border border-present-dim/50 px-2 py-1 rounded mr-1 cursor-pointer hover:border-present transition-colors"
+              className="hidden min-[440px]:flex items-center gap-1 text-[11px] font-mono font-medium text-present bg-present-soft border border-present-dim/50 px-2 py-1 rounded mr-1 cursor-pointer hover:border-present transition-colors"
               title="Achievements earned"
               aria-label={`${earnedCount} of ${ACHIEVEMENTS.length} achievements earned`}
             >
@@ -389,7 +395,7 @@ export const GamePage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowLeaderboard(true)}
-            className="p-2 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
+            className="p-1.5 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
             aria-label="Speed leaderboard"
           >
             <Trophy className="w-[18px] h-[18px]" />
@@ -397,7 +403,7 @@ export const GamePage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowHelp(true)}
-            className="p-2 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
+            className="p-1.5 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
             aria-label="How to play"
           >
             <HelpCircle className="w-[18px] h-[18px]" />
@@ -405,10 +411,18 @@ export const GamePage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowStats(true)}
-            className="p-2 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
+            className="p-1.5 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
             aria-label="Statistics"
           >
             <BarChart3 className="w-[18px] h-[18px]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowSettings(true)}
+            className="p-1.5 rounded-full hover:bg-surface text-muted hover:text-paper cursor-pointer transition-colors"
+            aria-label="Settings"
+          >
+            <SettingsIcon className="w-[18px] h-[18px]" />
           </button>
         </div>
       </header>
@@ -428,7 +442,10 @@ export const GamePage: React.FC = () => {
               mode === 'daily' ? 'text-correct' : 'text-muted'
             }`}
           >
-            Daily
+            Daily{' '}
+            <span className="font-mono text-[11px] opacity-70" title={challengeDate.current}>
+              No.&nbsp;{puzzleNumber(challengeDate.current)}
+            </span>
           </button>
           <button
             type="button"
@@ -580,6 +597,15 @@ export const GamePage: React.FC = () => {
           onClose={() => setShowStats(false)}
           shareText={shareText}
           showCountdown={mode === 'daily'}
+        />
+      )}
+      {showSettings && (
+        <SettingsModal
+          settings={settings}
+          onChange={updateSettings}
+          hardModeLocked={activeRound.status === 'in_progress' && activeRound.guesses.length > 0}
+          puzzleNo={puzzleNumber(challengeDate.current)}
+          onClose={() => setShowSettings(false)}
         />
       )}
       {showLeaderboard && <LeaderboardModal userId={userId} onClose={() => setShowLeaderboard(false)} />}

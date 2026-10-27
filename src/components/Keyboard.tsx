@@ -30,6 +30,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyStatuses, onKeyPress, dis
                 type="button"
                 disabled={disabled}
                 onClick={() => onKeyPress(key)}
+                aria-label={key === 'BACKSPACE' ? 'backspace' : key === 'ENTER' ? 'enter' : status === 'unused' ? `add ${key.toLowerCase()}` : `${key.toLowerCase()} ${status}`}
                 className={`${isWide ? 'flex-[1.6] text-[10px]' : 'flex-1 text-xs sm:text-sm'} h-12 sm:h-14 rounded-md font-semibold uppercase flex items-center justify-center transition-all duration-100 cursor-pointer active:scale-90 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 ${KEY_COLORS[status]}`}
               >
                 {key === 'BACKSPACE' ? (

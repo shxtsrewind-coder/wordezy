@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { GUESS_DICTIONARY } from '../data/dictionary.ts';
-import { MAX_GUESSES, WORD_LENGTH, buildKeyStatuses } from '../lib/wordle.ts';
+import { MAX_GUESSES, WORD_LENGTH, buildKeyStatuses, hardModeViolation } from '../lib/wordle.ts';
 import type { LetterStatus } from '../lib/wordle.ts';
 import type { ToastVariant } from '../components/Toast.tsx';
 
@@ -38,7 +38,8 @@ export function emptyRoundState(): RoundState {
 export function useWordleGame(
   round: RoundState,
   setRound: (updater: (prev: RoundState) => RoundState) => void,
-  resolveGuess: (guess: string) => Promise<SubmitResult>
+  resolveGuess: (guess: string) => Promise<SubmitResult>,
+  hardMode = false
 ) {
   const [currentGuess, setCurrentGuess] = useState('');
   const [toast, setToast] = useState<string | null>(null);
@@ -79,6 +80,14 @@ export function useWordleGame(
           showToast('Not in word list');
           return;
         }
+        if (hardMode) {
+          const rule = hardModeViolation(currentGuess.toLowerCase(), round.guesses, round.feedback);
+          if (rule) {
+            triggerShake();
+            showToast(rule);
+            return;
+          }
+        }
 
         setSubmitting(true);
         try {
@@ -114,7 +123,7 @@ export function useWordleGame(
         setCurrentGuess((g) => g + key);
       }
     },
-    [currentGuess, round.status, round.guesses.length, submitting, resolveGuess, setRound, showToast, triggerShake]
+    [currentGuess, round.status, round.guesses, round.feedback, hardMode, submitting, resolveGuess, setRound, showToast, triggerShake]
   );
 
   const keyStatuses = buildKeyStatuses(round.guesses, round.feedback);
