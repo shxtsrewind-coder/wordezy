@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { sharedAuthOptions } from './sharedAuth';
 
 export const SUPABASE_URL =
   (import.meta.env.VITE_SUPABASE_URL as string) || 'https://hkcvtoozpeybwehqtiif.supabase.co';
@@ -6,7 +7,7 @@ export const SUPABASE_KEY =
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
   'sb_publishable_CGTFNipWN_1IeG28m4upSg_n2HSsGai';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: sharedAuthOptions() });
 
 export interface ApiErrorPayload {
   error?: string;
