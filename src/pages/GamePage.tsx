@@ -170,7 +170,7 @@ export const GamePage: React.FC = () => {
         if (profileRow?.display_name) setDisplayName(profileRow.display_name);
       }
 
-      const choiceDone = typeof window !== 'undefined' && sessionStorage.getItem(PLAY_CHOICE_KEY) === 'true';
+      const choiceDone = true; // BGameWorld asks new players once, for every game (bgameworld.com/account.js)
       if (!anon || choiceDone) {
         await loadGameData();
       } else {
@@ -261,6 +261,7 @@ export const GamePage: React.FC = () => {
         // challenge link: fewer guesses scores higher, a loss scores zero.
         const guessCount = dailyRound.guesses.length + 1;
         reportChallengeScore(data.status === 'won' ? (7 - guessCount) * 10 : 0);
+        window.dispatchEvent(new CustomEvent("bgw:finished", { detail: { game: "wordezy" } })); // BGameWorld: suggest next games
       }
       return {
         feedback: data.feedback,
