@@ -74,7 +74,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ userId, currentDisplayName
       if (profileError) throw profileError;
       setUserCountry(selectedCode);
 
-      const { error: authError } = await supabase.auth.updateUser({ email: trimmedEmail, password });
+      const { error: authError } = await supabase.auth.updateUser(
+        { email: trimmedEmail, password },
+        // Bring them back to this game after they tap the link in the email.
+        { emailRedirectTo: window.location.origin + "/" }
+      );
       if (authError) throw authError;
 
       setConfirmationPending(true);
