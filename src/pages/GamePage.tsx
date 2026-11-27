@@ -589,6 +589,17 @@ export const GamePage: React.FC = () => {
         )}
       </main>
 
+      {/* bgameworld.com/account.js draws a "more games" showcase here, once today's word is done */}
+      {activeRound.status !== 'in_progress' && (
+        <div className="w-full max-w-[460px] mx-auto px-4 pb-8">
+          <div data-bgw-more-games data-game="wordezy">
+            <p className="text-center text-sm text-muted">
+              More free games on <a className="underline" href="https://bgameworld.com/">bgameworld.com</a>
+            </p>
+          </div>
+        </div>
+      )}
+
       <Toast message={active.toast} variant={active.toastVariant} />
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       {showStats && (
